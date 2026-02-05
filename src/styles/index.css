@@ -295,6 +295,36 @@ body {
   animation: shake 0.4s ease-in-out;
 }
 
+/* 弹窗淡入动画 */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* 弹窗缩放动画 */
+@keyframes scale-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* 攻击动画 */
 @keyframes attack-lunge {
   0%, 100% { transform: translateX(0) scale(1); }
