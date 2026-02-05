@@ -30,7 +30,7 @@ const LeaderboardMarquee: React.FC = () => {
         {/* 标题 */}
         <div className="flex-shrink-0 px-4 py-2 bg-luxury-gold/10 border-r border-white/10 flex items-center gap-2">
           <Trophy className="w-4 h-4 text-luxury-gold" />
-          <span className="text-xs font-semibold text-luxury-gold">今日 TOP 100</span>
+          <span className="text-xs font-semibold text-luxury-gold">TOP Profit</span>
         </div>
         {/* 滚动内容 */}
         <div className="flex-1 overflow-hidden relative">
