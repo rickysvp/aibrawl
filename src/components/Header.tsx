@@ -1,52 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { Wallet, LogOut, Zap, Sparkles, GitBranch, Trophy, TrendingUp } from 'lucide-react';
+import { Wallet, LogOut, Zap, Sparkles, GitBranch } from 'lucide-react';
 import versionData from '../../version.json';
 
-// 生成今日 TOP 100 排行榜数据
-const generateTop100 = () => {
-  const names = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa'];
-  const colors = ['text-luxury-gold', 'text-luxury-cyan', 'text-luxury-purple', 'text-luxury-rose', 'text-luxury-green'];
-  return Array.from({ length: 100 }, (_, i) => ({
-    rank: i + 1,
-    name: `${names[Math.floor(Math.random() * names.length)]}-${Math.floor(Math.random() * 9999)}`,
-    profit: Math.floor(Math.random() * 50000) + 1000,
-    color: colors[Math.floor(Math.random() * colors.length)]
-  })).sort((a, b) => b.profit - a.profit);
-};
-
-// 跑马灯组件
-const LeaderboardMarquee: React.FC = () => {
-  const top100 = useMemo(() => generateTop100(), []);
-
-  return (
-    <div className="w-full bg-void-panel/80 border-b border-white/5 overflow-hidden">
-      <div className="flex items-center">
-        {/* 标题 */}
-        <div className="flex-shrink-0 px-4 py-2 bg-luxury-gold/10 border-r border-white/10 flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-luxury-gold" />
-          <span className="text-xs font-semibold text-luxury-gold">今日 TOP 100</span>
-        </div>
-        {/* 滚动内容 */}
-        <div className="flex-1 overflow-hidden relative">
-          <div className="flex animate-marquee whitespace-nowrap">
-            {top100.map((agent, index) => (
-              <div key={index} className="flex items-center gap-2 px-4 py-2">
-                <span className="text-xs text-white/40 font-mono">#{agent.rank}</span>
-                <span className={`text-xs font-medium ${agent.color}`}>{agent.name}</span>
-                <span className="text-xs text-luxury-green font-mono">+{agent.profit.toLocaleString()}</span>
-                <span className="text-[10px] text-white/20">$MON</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Header: React.FC = () => {
-  const { wallet, connectWallet, disconnectWallet, systemAgents } = useGameStore();
+  const { wallet, connectWallet, disconnectWallet } = useGameStore();
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
@@ -64,17 +22,13 @@ const Header: React.FC = () => {
   };
 
   return (
-    <>
-      {/* 排行榜跑马灯 */}
-      <LeaderboardMarquee />
-
-      <header
-        className={`fixed top-[33px] left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? 'glass-strong shadow-luxury'
-            : 'bg-transparent'
-        }`}
-      >
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'glass-strong shadow-luxury'
+          : 'bg-transparent'
+      }`}
+    >
         <div className="max-w-screen-xl mx-auto px-4 h-20 flex items-center justify-between">
         {/* Logo */}
         <div 
@@ -225,7 +179,6 @@ const Header: React.FC = () => {
       {/* 底部渐变线 */}
       <div className={`h-px bg-gradient-to-r from-transparent via-luxury-purple/50 to-transparent transition-opacity duration-300 ${scrolled ? 'opacity-100' : 'opacity-0'}`} />
     </header>
-    </>
   );
 };
 

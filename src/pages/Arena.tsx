@@ -7,6 +7,48 @@ import { Agent } from '../types';
 import { Swords, Users, Trophy, Zap, TrendingUp, Plus, Wallet, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+// 生成今日 TOP 100 排行榜数据
+const generateTop100 = () => {
+  const names = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa'];
+  const colors = ['text-luxury-gold', 'text-luxury-cyan', 'text-luxury-purple', 'text-luxury-rose', 'text-luxury-green'];
+  return Array.from({ length: 100 }, (_, i) => ({
+    rank: i + 1,
+    name: `${names[Math.floor(Math.random() * names.length)]}-${Math.floor(Math.random() * 9999)}`,
+    profit: Math.floor(Math.random() * 50000) + 1000,
+    color: colors[Math.floor(Math.random() * colors.length)]
+  })).sort((a, b) => b.profit - a.profit);
+};
+
+// 跑马灯组件
+const LeaderboardMarquee: React.FC = () => {
+  const top100 = useMemo(() => generateTop100(), []);
+
+  return (
+    <div className="w-full bg-void-panel/80 border border-white/5 rounded-xl overflow-hidden mb-4">
+      <div className="flex items-center">
+        {/* 标题 */}
+        <div className="flex-shrink-0 px-4 py-2 bg-luxury-gold/10 border-r border-white/10 flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-luxury-gold" />
+          <span className="text-xs font-semibold text-luxury-gold">今日 TOP 100</span>
+        </div>
+        {/* 滚动内容 */}
+        <div className="flex-1 overflow-hidden relative">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {top100.map((agent, index) => (
+              <div key={index} className="flex items-center gap-2 px-4 py-2">
+                <span className="text-xs text-white/40 font-mono">#{agent.rank}</span>
+                <span className={`text-xs font-medium ${agent.color}`}>{agent.name}</span>
+                <span className="text-xs text-luxury-green font-mono">+{agent.profit.toLocaleString()}</span>
+                <span className="text-[10px] text-white/20">$MON</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 战斗阶段类型 - 与 store 中的 RoundPhase 保持一致
 type BattlePhase = 'waiting' | 'selecting' | 'loading' | 'countdown' | 'fighting' | 'settlement';
 
@@ -340,6 +382,9 @@ const Arena: React.FC = () => {
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
+        {/* 排行榜跑马灯 - 在竞技场标题上方 */}
+        <LeaderboardMarquee />
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* 左侧：竞技场 */}
           <div ref={leftPanelRef} className="lg:col-span-3 space-y-6 relative">
