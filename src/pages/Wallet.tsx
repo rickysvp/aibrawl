@@ -930,25 +930,24 @@ const WalletPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-3">
                 {nfts.map((nft) => (
                   <div
                     key={nft.id}
                     onClick={() => { setSelectedNFT(nft); setShowNFTDetailModal(true); }}
-                    className="group relative bg-void-light rounded-xl p-5 border border-white/10 hover:border-white/20 transition-all cursor-pointer overflow-hidden"
+                    className="group relative bg-void-light rounded-xl p-3 border border-white/10 hover:border-white/20 transition-all cursor-pointer overflow-hidden"
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${getRarityColor(nft.rarity)} opacity-0 group-hover:opacity-30 rounded-xl transition-opacity`} />
-                    <div className="relative w-full aspect-square mb-4 rounded-lg overflow-hidden bg-void">
+                    <div className="relative w-full aspect-square mb-2 rounded-lg overflow-hidden bg-void">
                       <img
                         src={nft.image}
                         alt={nft.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <p className="text-sm font-medium text-white text-center mb-1">{nft.name}</p>
-                    <p className="text-xs text-white/40 text-center capitalize">{nft.rarity}</p>
-                    <p className="text-sm font-bold text-luxury-gold font-mono text-center mt-2">{nft.value} $MON</p>
-                    <p className="text-xs text-white/30 text-center">≈ ${toUSDT(nft.value)} USDT</p>
+                    <p className="text-xs font-medium text-white text-center mb-0.5 truncate">{nft.name}</p>
+                    <p className="text-[10px] text-white/40 text-center capitalize">{nft.rarity}</p>
+                    <p className="text-xs font-bold text-luxury-gold font-mono text-center mt-1">{nft.value}</p>
                   </div>
                 ))}
               </div>

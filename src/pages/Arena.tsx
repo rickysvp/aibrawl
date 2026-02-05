@@ -45,8 +45,6 @@ const PlatformStats: React.FC = () => {
           <span className="text-xs font-semibold text-luxury-gold">TVL</span>
           <span className="text-xs font-bold text-white font-mono">{totalTVL.toLocaleString()} $MON</span>
         </div>
-        {/* 占位填充 */}
-        <div className="flex-1" />
       </div>
     </div>
   );
@@ -406,15 +404,15 @@ const Arena: React.FC = () => {
   const currentSelectedSlots = timerStateRef.current.selectedSlots;
 
   // 使用系统全局轮次计数 - 动态计算
-  const [displaySystemRounds, setDisplaySystemRounds] = useState(5);
+  const [displaySystemRounds, setDisplaySystemRounds] = useState(1);
 
   useEffect(() => {
     const updateRounds = () => {
       const store = useGameStore.getState();
       const now = Date.now();
       const elapsed = now - store.lastSystemRoundUpdate;
-      // 每200ms增加10轮，模拟50个并行竞技场
-      const additionalRounds = Math.floor(elapsed / 200) * 10;
+      // 每1000ms增加1轮，从1开始
+      const additionalRounds = Math.floor(elapsed / 1000);
       setDisplaySystemRounds(store.totalSystemRounds + additionalRounds);
     };
 
