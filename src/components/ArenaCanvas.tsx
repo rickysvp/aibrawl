@@ -217,14 +217,16 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     return () => clearInterval(cleanup);
   }, []);
   
-  // 获取坑位位置（百分比）- 扩大半径避免遮挡
+  // 获取坑位位置（百分比）- 使用椭圆布局避免中间和两边重叠
   const getSlotPosition = (index: number, total: number) => {
-    const angle = (index / Math.max(total, 10)) * Math.PI * 2 - Math.PI / 2;
-    const radius = 42; // 从 38 增加到 42，扩大布局
-    return {
-      x: 50 + Math.cos(angle) * radius,
-      y: 50 + Math.sin(angle) * radius,
-    };
+    // 10个位置分成上下两行，每行5个
+    const positions = [
+      // 上行 - 稍微偏上
+      { x: 20, y: 30 }, { x: 35, y: 22 }, { x: 50, y: 18 }, { x: 65, y: 22 }, { x: 80, y: 30 },
+      // 下行 - 稍微偏下
+      { x: 20, y: 70 }, { x: 35, y: 78 }, { x: 50, y: 82 }, { x: 65, y: 78 }, { x: 80, y: 70 },
+    ];
+    return positions[index] || { x: 50, y: 50 };
   };
   
   const slotPositions = Array.from({ length: 10 }, (_, i) => getSlotPosition(i, 10));

@@ -339,7 +339,7 @@ const Arena: React.FC = () => {
                                 <p className="text-[10px] text-luxury-gold">冠军</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-lg font-bold text-luxury-green font-mono">+{arena.top3[0].profit} <span className="text-[10px]">$MON</span></p>
+                                <p className="text-lg font-bold font-mono" style={{ color: '#22c55e', textShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}>+{arena.top3[0].profit} <span className="text-[10px]">$MON</span></p>
                               </div>
                             </div>
                           </div>
@@ -356,7 +356,7 @@ const Arena: React.FC = () => {
                                 <span className="text-[10px] text-gray-300">亚军</span>
                               </div>
                               <p className="text-xs font-semibold text-white truncate">{arena.top3[1].agent.name}</p>
-                              <p className="text-sm font-bold text-luxury-green font-mono mt-0.5">+{arena.top3[1].profit} <span className="text-[8px]">$MON</span></p>
+                              <p className="text-sm font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[1].profit} <span className="text-[8px]">$MON</span></p>
                             </div>
                           )}
                           {arena.top3[2] && (
@@ -368,7 +368,7 @@ const Arena: React.FC = () => {
                                 <span className="text-[10px] text-amber-600">季军</span>
                               </div>
                               <p className="text-xs font-semibold text-white truncate">{arena.top3[2].agent.name}</p>
-                              <p className="text-sm font-bold text-luxury-green font-mono mt-0.5">+{arena.top3[2].profit} <span className="text-[8px]">$MON</span></p>
+                              <p className="text-sm font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[2].profit} <span className="text-[8px]">$MON</span></p>
                             </div>
                           )}
                         </div>
