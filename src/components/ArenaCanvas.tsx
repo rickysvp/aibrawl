@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Agent, Projectile, DamageNumber } from '../types';
+import { Agent, Projectile, DamageNumber, CoinTransfer } from '../types';
 import { useGameStore } from '../store/gameStore';
 import PixelAgent from './PixelAgent';
-import { Swords, Users, Timer, Trophy } from 'lucide-react';
+import { Swords, Users, Timer, Trophy, Coins } from 'lucide-react';
 
 interface ArenaCanvasProps {
   participants: Agent[];
@@ -11,14 +11,15 @@ interface ArenaCanvasProps {
   selectedSlots: number[];
 }
 
-const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ 
-  participants, 
-  phase, 
+const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
+  participants,
+  phase,
   countdown,
-  selectedSlots 
+  selectedSlots
 }) => {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [damageNumbers, setDamageNumbers] = useState<DamageNumber[]>([]);
+  const [coinTransfers, setCoinTransfers] = useState<CoinTransfer[]>([]);
   const [explosions, setExplosions] = useState<{id: string; x: number; y: number; timestamp: number}[]>([]);
   const [attackingAgents, setAttackingAgents] = useState<Set<string>>(new Set());
   const [hurtAgents, setHurtAgents] = useState<Set<string>>(new Set());
@@ -80,7 +81,10 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         const baseDamage = attacker.attack - target.defense + Math.floor(Math.random() * 10);
         const damage = Math.max(1, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
         const newHp = Math.max(0, target.hp - damage);
-        
+
+        // 计算掠夺资金 (造成伤害的 10%)
+        const lootAmount = Math.floor(damage * 0.1);
+
         // 设置受伤动画
         setHurtAgents(prev => new Set(prev).add(target.id));
         setTimeout(() => {
@@ -90,7 +94,7 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             return next;
           });
         }, 300);
-        
+
         // 添加伤害数字
         setDamageNumbers(prev => [...prev, {
           id: Math.random().toString(36).substr(2, 9),
@@ -100,10 +104,21 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           isCrit,
           timestamp: Date.now(),
         }]);
-        
+
+        // 添加资金转移效果
+        if (lootAmount > 0) {
+          setCoinTransfers(prev => [...prev, {
+            id: Math.random().toString(36).substr(2, 9),
+            x: targetPos.x,
+            y: targetPos.y,
+            amount: lootAmount,
+            timestamp: Date.now(),
+          }]);
+        }
+
         // 更新目标 HP
         updateParticipant(target.id, { hp: newHp, status: newHp <= 0 ? 'dead' : 'fighting' });
-        
+
         // 击杀效果
         if (newHp <= 0) {
           setExplosions(prev => [...prev, {
@@ -112,7 +127,7 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             y: targetPos.y,
             timestamp: Date.now(),
           }]);
-          
+
           addBattleLog({
             type: 'kill',
             attacker,
@@ -156,11 +171,12 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     };
   }, []);
   
-  // 清理伤害数字和爆炸效果
+  // 清理伤害数字、资金转移和爆炸效果
   useEffect(() => {
     const cleanup = setInterval(() => {
       const now = Date.now();
       setDamageNumbers(prev => prev.filter(d => now - d.timestamp < 1000));
+      setCoinTransfers(prev => prev.filter(c => now - c.timestamp < 1500));
       setExplosions(prev => prev.filter(e => now - e.timestamp < 500));
     }, 100);
     return () => clearInterval(cleanup);
@@ -390,14 +406,33 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             top: `${d.y}%`,
             color: d.isCrit ? '#f43f5e' : '#ffffff',
             fontSize: d.isCrit ? '20px' : '16px',
-            textShadow: d.isCrit 
-              ? '0 0 20px #f43f5e, 0 0 40px #f43f5e' 
+            textShadow: d.isCrit
+              ? '0 0 20px #f43f5e, 0 0 40px #f43f5e'
               : '0 0 10px #000, 2px 2px 0 #000',
             transform: 'translate(-50%, -50%)',
           }}
         >
           {d.isCrit && <span className="text-luxury-gold text-sm block text-center">暴击!</span>}
           <span className="font-mono">-{d.damage}</span>
+        </div>
+      ))}
+
+      {/* 资金转移效果 */}
+      {coinTransfers.map(c => (
+        <div
+          key={c.id}
+          className="absolute pointer-events-none z-35 animate-coin-float"
+          style={{
+            left: `${c.x}%`,
+            top: `${c.y}%`,
+            transform: 'translate(-50%, -50%)',
+            animation: 'coin-float 1.5s ease-out forwards',
+          }}
+        >
+          <div className="flex items-center gap-1 bg-luxury-gold/90 text-void px-2 py-1 rounded-full shadow-lg shadow-luxury-gold/50">
+            <Coins className="w-3 h-3" />
+            <span className="text-xs font-bold font-mono">+{c.amount}</span>
+          </div>
         </div>
       ))}
       

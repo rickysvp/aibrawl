@@ -86,3 +86,12 @@ export interface DamageNumber {
   isCrit: boolean;
   timestamp: number;
 }
+
+// 资金转移飘字
+export interface CoinTransfer {
+  id: string;
+  x: number;
+  y: number;
+  amount: number;
+  timestamp: number;
+}

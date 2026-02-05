@@ -280,14 +280,11 @@ const Arena: React.FC = () => {
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center">
                     <Swords className="w-5 h-5 text-luxury-purple-light" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-semibold text-white">战斗舞台</h2>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 font-mono">
-                        Round {currentRound}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/40">实时战斗画面</p>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-white">战斗舞台</h2>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 font-mono">
+                      Round {currentRound}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-green/10 border border-luxury-green/20">
