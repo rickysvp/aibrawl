@@ -298,8 +298,7 @@ const Arena: React.FC = () => {
                 </div>
               </div>
               <div className="aspect-video p-4 relative">
-                <ArenaCanvas 
-                  participants={currentParticipants}
+                <ArenaCanvas
                   phase={currentPhase}
                   countdown={currentCountdown}
                   selectedSlots={currentSelectedSlots}

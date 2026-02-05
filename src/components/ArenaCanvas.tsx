@@ -5,14 +5,12 @@ import PixelAgent from './PixelAgent';
 import { Swords, Users, Timer, Trophy, Coins, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface ArenaCanvasProps {
-  participants: Agent[];
   phase: string;
   countdown: number;
   selectedSlots: number[];
 }
 
 const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
-  participants,
   phase,
   countdown,
   selectedSlots
@@ -25,7 +23,9 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   const [hurtAgents, setHurtAgents] = useState<Set<string>>(new Set());
   const canvasRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
-  
+
+  // 直接从 store 获取 participants，确保实时更新
+  const participants = useGameStore(state => state.arena.participants);
   const addBattleLog = useGameStore(state => state.addBattleLog);
   const updateParticipant = useGameStore(state => state.updateParticipant);
   const roundNumber = useGameStore(state => state.arena.roundNumber);
