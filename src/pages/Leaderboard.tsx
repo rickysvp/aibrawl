@@ -106,43 +106,78 @@ const Leaderboard: React.FC = () => {
           ))}
         </div>
 
-        {/* TOP 3 展示 */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {currentData.slice(0, 3).map((agent, index) => {
-            const positions = [
-              { order: 2, height: 'h-48', scale: 'scale-110', z: 'z-10' }, // 第1名 中间
-              { order: 1, height: 'h-40', scale: 'scale-100', z: 'z-0' }, // 第2名 左边
-              { order: 3, height: 'h-36', scale: 'scale-95', z: 'z-0' }   // 第3名 右边
-            ];
-            const pos = positions[index];
-            const isFirst = index === 0;
-
-            return (
-              <div
-                key={agent.rank}
-                className={`${pos.order} ${pos.height} ${pos.scale} ${pos.z} relative`}
-              >
-                <div className={`h-full card-luxury rounded-2xl overflow-hidden border-2 ${
-                  isFirst ? 'border-luxury-gold' : 'border-white/10'
-                } flex flex-col items-center justify-center p-4`}>
-                  <div className={`w-16 h-16 rounded-full ${getRankStyle(agent.rank)} flex items-center justify-center text-2xl mb-3`}>
-                    {getRankIcon(agent.rank) || agent.rank}
+        {/* TOP 3 展示 - 第一名在上，第二第三在下左右 */}
+        <div className="mb-8">
+          {/* 第一名 */}
+          {currentData[0] && (
+            <div className="relative mb-4">
+              <div className="card-luxury rounded-2xl overflow-hidden border-2 border-luxury-gold p-6">
+                <div className="flex flex-col items-center">
+                  {/* CHAMPION 标签 */}
+                  <div className="px-4 py-1 bg-luxury-gold text-void text-xs font-bold rounded-full mb-4">
+                    🏆 CHAMPION
                   </div>
-                  <div className="text-3xl mb-2">{agent.avatar}</div>
-                  <p className="text-white font-semibold text-center truncate w-full">{agent.name}</p>
-                  <p className={`text-lg font-bold font-mono mt-1 ${isFirst ? 'text-luxury-gold' : 'text-luxury-green'}`}>
-                    +{agent.profit.toLocaleString()}
+                  {/* 排名 */}
+                  <div className="w-20 h-20 rounded-full bg-luxury-gold text-void flex items-center justify-center text-3xl mb-4 shadow-lg shadow-luxury-gold/30">
+                    <Crown className="w-10 h-10" />
+                  </div>
+                  {/* 头像 */}
+                  <div className="text-5xl mb-3">{currentData[0].avatar}</div>
+                  {/* 名称 */}
+                  <p className="text-xl font-bold text-white text-center mb-2">{currentData[0].name}</p>
+                  {/* 盈利 */}
+                  <p className="text-2xl font-bold font-mono text-luxury-gold mb-1">
+                    +{currentData[0].profit.toLocaleString()} <span className="text-sm">$MON</span>
                   </p>
-                  <p className="text-xs text-white/40 mt-1">{agent.winRate}% 胜率</p>
+                  {/* 胜率 */}
+                  <p className="text-sm text-white/60">{currentData[0].winRate}% 胜率 · {currentData[0].battles} 场战斗</p>
                 </div>
-                {isFirst && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-luxury-gold text-void text-xs font-bold rounded-full">
-                    CHAMPION
-                  </div>
-                )}
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {/* 第二、三名并排 */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* 第二名 */}
+            {currentData[1] && (
+              <div className="card-luxury rounded-2xl overflow-hidden border border-gray-400/30 p-5">
+                <div className="flex flex-col items-center">
+                  <div className="px-3 py-0.5 bg-gray-300 text-void text-xs font-bold rounded-full mb-3">
+                    亚军
+                  </div>
+                  <div className="w-16 h-16 rounded-full bg-gray-300 text-void flex items-center justify-center text-2xl mb-3">
+                    <Medal className="w-8 h-8" />
+                  </div>
+                  <div className="text-4xl mb-2">{currentData[1].avatar}</div>
+                  <p className="text-lg font-semibold text-white text-center mb-1">{currentData[1].name}</p>
+                  <p className="text-xl font-bold font-mono text-luxury-green">
+                    +{currentData[1].profit.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-white/50 mt-1">{currentData[1].winRate}% 胜率</p>
+                </div>
+              </div>
+            )}
+
+            {/* 第三名 */}
+            {currentData[2] && (
+              <div className="card-luxury rounded-2xl overflow-hidden border border-amber-600/30 p-5">
+                <div className="flex flex-col items-center">
+                  <div className="px-3 py-0.5 bg-amber-600 text-white text-xs font-bold rounded-full mb-3">
+                    季军
+                  </div>
+                  <div className="w-16 h-16 rounded-full bg-amber-600 text-white flex items-center justify-center text-2xl mb-3">
+                    <Target className="w-8 h-8" />
+                  </div>
+                  <div className="text-4xl mb-2">{currentData[2].avatar}</div>
+                  <p className="text-lg font-semibold text-white text-center mb-1">{currentData[2].name}</p>
+                  <p className="text-xl font-bold font-mono text-luxury-green">
+                    +{currentData[2].profit.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-white/50 mt-1">{currentData[2].winRate}% 胜率</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 完整榜单 */}
