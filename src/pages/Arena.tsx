@@ -304,8 +304,8 @@ const Arena: React.FC = () => {
                 
                 {/* 结算弹窗 */}
                 {showSettlement && arena.top3.length > 0 && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-void/90 backdrop-blur-sm animate-fade-in">
-                    <div className="card-luxury rounded-3xl overflow-hidden border-luxury-gold/30 max-w-md w-full mx-4 animate-scale-in">
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-void animate-fade-in">
+                    <div className="bg-void-panel rounded-3xl overflow-hidden border border-luxury-gold/30 max-w-md w-full mx-4 animate-scale-in shadow-2xl shadow-luxury-gold/20">
                       {/* 头部 */}
                       <div className="px-8 py-6 bg-gradient-to-r from-luxury-gold/20 via-luxury-amber/10 to-luxury-gold/20 border-b border-luxury-gold/20">
                         <div className="flex items-center justify-between">

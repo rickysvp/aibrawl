@@ -345,27 +345,31 @@ body {
   animation: coin-float 1.5s ease-out forwards;
 }
 
-/* 余额变化动画 */
-@keyframes balance-change {
+/* 余额变化动画 - 更凸显的弹出效果 */
+@keyframes balance-change-pop {
   0% {
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translate(-50%, -50%) scale(0.3);
     opacity: 0;
   }
-  15% {
-    transform: translate(-50%, -80%) scale(1.3);
+  10% {
+    transform: translate(-50%, -60%) scale(1.5);
     opacity: 1;
   }
-  30% {
-    transform: translate(-50%, -90%) scale(1.1);
+  20% {
+    transform: translate(-50%, -80%) scale(1.3);
+  }
+  40% {
+    transform: translate(-50%, -100%) scale(1.2);
+    opacity: 1;
   }
   100% {
-    transform: translate(-50%, -180%) scale(1);
+    transform: translate(-50%, -200%) scale(1);
     opacity: 0;
   }
 }
 
-.animate-balance-change {
-  animation: balance-change 1.2s ease-out forwards;
+.animate-balance-change-pop {
+  animation: balance-change-pop 1.5s ease-out forwards;
 }
 
 /* 攻击动画 */

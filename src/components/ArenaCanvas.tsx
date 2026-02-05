@@ -453,29 +453,29 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       ))}
 
-      {/* 余额变化效果 - 绿色加血，红色减血 */}
+      {/* 余额变化效果 - 绿色加血，红色减血 - 最上层显示 */}
       {balanceChanges.map(b => (
         <div
           key={b.id}
-          className="absolute pointer-events-none z-36"
+          className="absolute pointer-events-none z-[100]"
           style={{
             left: `${b.x}%`,
             top: `${b.y}%`,
             transform: 'translate(-50%, -50%)',
-            animation: 'balance-change 1.2s ease-out forwards',
+            animation: 'balance-change-pop 1.5s ease-out forwards',
           }}
         >
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full shadow-lg ${
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl shadow-2xl border-2 ${
             b.isGain
-              ? 'bg-luxury-green/90 text-white shadow-luxury-green/50'
-              : 'bg-luxury-rose/90 text-white shadow-luxury-rose/50'
+              ? 'bg-luxury-green text-white border-luxury-green-light shadow-luxury-green/60'
+              : 'bg-luxury-rose text-white border-rose-400 shadow-luxury-rose/60'
           }`}>
             {b.isGain ? (
-              <TrendingUp className="w-3 h-3" />
+              <TrendingUp className="w-4 h-4 animate-bounce" />
             ) : (
-              <TrendingDown className="w-3 h-3" />
+              <TrendingDown className="w-4 h-4 animate-bounce" />
             )}
-            <span className="text-xs font-bold font-mono">
+            <span className="text-sm font-bold font-mono">
               {b.isGain ? '+' : '-'}{b.amount} $MON
             </span>
           </div>
