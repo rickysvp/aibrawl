@@ -20,18 +20,19 @@ interface TimerState {
 }
 
 const Arena: React.FC = () => {
-  const { 
-    arena, 
-    myAgents, 
+  const {
+    arena,
+    myAgents,
     systemAgents,
     wallet,
-    initializeArena, 
-    startNewRound, 
+    initializeArena,
+    startNewRound,
     setArenaPhase,
     addBattleLog,
     updateParticipant,
     setTop3,
     myBattleLogs,
+    incrementSystemRound,
   } = useGameStore();
   
   const navigate = useNavigate();
@@ -108,6 +109,7 @@ const Arena: React.FC = () => {
         syncPhaseToStore('selecting');
         startNewRound();
         incrementRound();
+        incrementSystemRound(); // 增加系统全局轮次计数
         
         // 获取当前最新的 agents 状态
         const currentState = useGameStore.getState();
@@ -275,9 +277,11 @@ const Arena: React.FC = () => {
   // 使用 ref 中的状态传递给子组件
   const currentPhase = timerStateRef.current.phase;
   const currentCountdown = timerStateRef.current.countdown;
-  const currentRound = timerStateRef.current.round;
   const currentParticipants = timerStateRef.current.participants;
   const currentSelectedSlots = timerStateRef.current.selectedSlots;
+
+  // 使用系统全局轮次计数
+  const totalSystemRounds = useGameStore(state => state.totalSystemRounds);
 
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
@@ -295,7 +299,7 @@ const Arena: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-white">AIrena</h2>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 font-mono">
-                      Round {currentRound}
+                      Round {totalSystemRounds.toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -324,7 +328,7 @@ const Arena: React.FC = () => {
                             <Trophy className="w-5 h-5 text-luxury-gold" />
                             <div>
                               <h3 className="text-sm font-bold text-luxury-gold font-display">本轮 TOP3</h3>
-                              <p className="text-[10px] text-white/40">第 {currentRound} 轮结算</p>
+                              <p className="text-[10px] text-white/40">第 {timerStateRef.current.round} 轮结算</p>
                             </div>
                           </div>
                           <button

@@ -7,7 +7,7 @@ interface GameStore {
   wallet: WalletState;
   connectWallet: () => void;
   disconnectWallet: () => void;
-  
+
   // 玩家的 Agents
   myAgents: Agent[];
   mintAgent: () => Agent | null;
@@ -15,7 +15,7 @@ interface GameStore {
   withdrawFunds: (agentId: string, amount: number) => void;
   joinArena: (agentId: string) => void;
   leaveArena: (agentId: string) => void;
-  
+
   // 竞技场状态
   arena: ArenaState;
   systemAgents: Agent[];
@@ -25,15 +25,19 @@ interface GameStore {
   addBattleLog: (log: Omit<BattleLog, 'id' | 'timestamp'>) => void;
   updateParticipant: (agentId: string, updates: Partial<Agent>) => void;
   setTop3: (top3: { agent: Agent; profit: number }[]) => void;
-  
+
   // 我的战斗日志
   myBattleLogs: BattleLog[];
-  
+
   // 锦标赛
   tournaments: Tournament[];
-  
+
   // 铸造费用
   mintCost: number;
+
+  // 系统全局轮次计数（所有并行竞技场总和）
+  totalSystemRounds: number;
+  incrementSystemRound: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -226,7 +230,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   
   // 我的战斗日志
   myBattleLogs: [],
-  
+
   // 锦标赛
   tournaments: [
     {
@@ -262,4 +266,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       winners: [],
     },
   ],
+
+  // 系统全局轮次计数（所有并行竞技场总和）
+  totalSystemRounds: 12580, // 初始值，表示系统已经运行了很多轮
+
+  incrementSystemRound: () => {
+    set((state) => ({
+      totalSystemRounds: state.totalSystemRounds + 1,
+    }));
+  },
 }));
