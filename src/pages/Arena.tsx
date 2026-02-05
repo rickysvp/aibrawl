@@ -424,8 +424,6 @@ const Arena: React.FC = () => {
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
-        {/* 平台统计 - 在顶部 */}
-        <PlatformStats />
         {/* 排行榜跑马灯 - 在竞技场标题上方 */}
         <LeaderboardMarquee />
 
