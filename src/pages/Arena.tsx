@@ -22,14 +22,18 @@ const generateTop100 = () => {
 // 跑马灯组件
 const LeaderboardMarquee: React.FC = () => {
   const top100 = useMemo(() => generateTop100(), []);
+  const navigate = useNavigate();
 
   return (
-    <div className="w-full bg-void-panel/80 border border-white/5 rounded-xl overflow-hidden mb-4">
+    <div className="w-full bg-void-panel/80 border border-white/5 rounded-xl overflow-hidden mb-4 group cursor-pointer hover:border-luxury-gold/30 transition-colors"
+      onClick={() => navigate('/leaderboard')}
+    >
       <div className="flex items-center">
         {/* 标题 */}
-        <div className="flex-shrink-0 px-4 py-2 bg-luxury-gold/10 border-r border-white/10 flex items-center gap-2">
+        <div className="flex-shrink-0 px-4 py-2 bg-luxury-gold/10 border-r border-white/10 flex items-center gap-2 group-hover:bg-luxury-gold/20 transition-colors">
           <Trophy className="w-4 h-4 text-luxury-gold" />
           <span className="text-xs font-semibold text-luxury-gold">今日 TOP 100</span>
+          <span className="text-[10px] text-luxury-gold/60 ml-1">点击查看完整榜单 →</span>
         </div>
         {/* 滚动内容 */}
         <div className="flex-1 overflow-hidden relative">
