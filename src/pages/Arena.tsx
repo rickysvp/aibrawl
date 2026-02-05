@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import ArenaCanvas from '../components/ArenaCanvas';
 import BattleLog from '../components/BattleLog';
@@ -27,9 +27,10 @@ const Arena: React.FC = () => {
   const [showSettlement, setShowSettlement] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
   
-  // 使用 ref 来跟踪最新的 round 数，避免闭包问题
+  // 使用 ref 来跟踪状态，避免闭包问题
   const roundRef = useRef(1);
-  const isRunningRef = useRef(true);
+  const isRunningRef = useRef(false);
+  const hasInitializedRef = useRef(false);
   
   // 初始化竞技场
   useEffect(() => {
@@ -38,13 +39,19 @@ const Arena: React.FC = () => {
     }
   }, [initializeArena, systemAgents.length]);
   
-  // 战斗循环 - 使用 ref 避免闭包问题
+  // 战斗循环 - 只在组件挂载时启动一次
   useEffect(() => {
+    // 防止重复启动
+    if (isRunningRef.current || hasInitializedRef.current) return;
     if (systemAgents.length === 0) return;
     
+    hasInitializedRef.current = true;
     isRunningRef.current = true;
     
     const runBattleLoop = async () => {
+      // 等待一小段时间确保初始化完成
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       while (isRunningRef.current) {
         // 1. 准备阶段 - 选择参赛者
         setArenaPhase('selecting');
@@ -54,11 +61,22 @@ const Arena: React.FC = () => {
         roundRef.current += 1;
         setCurrentRound(roundRef.current);
         
+        // 获取当前最新的 agents 状态
+        const currentState = useGameStore.getState();
+        const currentMyAgents = currentState.myAgents;
+        const currentSystemAgents = currentState.systemAgents;
+        
         // 随机选择10个参赛者
         const availableAgents: Agent[] = [
-          ...myAgents.filter(a => a.status === 'in_arena'),
-          ...systemAgents.filter(a => a.status === 'in_arena' && a.hp > 0),
+          ...currentMyAgents.filter(a => a.status === 'in_arena'),
+          ...currentSystemAgents.filter(a => a.status === 'in_arena' && a.hp > 0),
         ];
+        
+        // 如果没有足够的参赛者，等待后重试
+        if (availableAgents.length < 2) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          continue;
+        }
         
         const shuffled = [...availableAgents].sort(() => Math.random() - 0.5);
         const participants = shuffled.slice(0, 10);
@@ -162,13 +180,13 @@ const Arena: React.FC = () => {
     };
     
     // 启动战斗循环
-    const timer = setTimeout(runBattleLoop, 1000);
+    runBattleLoop();
     
+    // 清理函数
     return () => {
       isRunningRef.current = false;
-      clearTimeout(timer);
     };
-  }, [systemAgents.length, myAgents.length]); // 添加依赖项
+  }, []); // 空依赖数组，只在组件挂载时执行一次
   
   // 我的在竞技场的 Agents
   const myArenaAgents = myAgents.filter(a => a.status === 'in_arena' || a.status === 'fighting');
@@ -210,7 +228,7 @@ const Arena: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-cyan/10 border border-luxury-cyan/20">
                     <TrendingUp className="w-4 h-4 text-luxury-cyan" />
-                    <span className="text-sm text-luxury-cyan font-mono">#{arena.roundNumber || currentRound}</span>
+                    <span className="text-sm text-luxury-cyan font-mono">#{currentRound}</span>
                   </div>
                 </div>
               </div>
