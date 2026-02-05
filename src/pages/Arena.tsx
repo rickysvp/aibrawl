@@ -541,20 +541,20 @@ const Arena: React.FC = () => {
             <div className="card-luxury rounded-2xl overflow-hidden">
               {/* Tab 头部 - 简化设计 */}
               <div className="px-6 py-3 border-b border-white/5">
-                <div className="flex items-center gap-1 relative bg-void-light/20 rounded-xl p-1 w-fit isolate">
+                <div className="flex items-center relative bg-void-light/20 rounded-xl p-1 w-fit isolate">
                   {/* 滑动背景指示器 - 在文字下方 */}
                   <motion.div
                     className="absolute inset-y-1 rounded-lg bg-luxury-purple/20 -z-10"
                     initial={false}
                     animate={{
-                      x: logTab === 'arena' ? 0 : 100,
-                      width: 100
+                      x: logTab === 'arena' ? 4 : 'calc(100% + 4px)',
+                      width: 'calc(50% - 4px)'
                     }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                   <button
                     onClick={() => setLogTab('arena')}
-                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`relative px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       logTab === 'arena'
                         ? 'text-white'
                         : 'text-white/50 hover:text-white/80'
@@ -567,7 +567,7 @@ const Arena: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setLogTab('my')}
-                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`relative px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       logTab === 'my'
                         ? 'text-white'
                         : 'text-white/50 hover:text-white/80'
