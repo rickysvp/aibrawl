@@ -297,38 +297,62 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // 锦标赛
   tournaments: [
     {
-      id: '1',
-      name: '新手杯',
-      status: 'ongoing',
-      prizePool: 10000,
-      participants: 45,
-      maxParticipants: 64,
-      startTime: Date.now() - 3600000,
-      entryFee: 50,
-    },
-    {
-      id: '2',
-      name: '精英挑战赛',
-      status: 'upcoming',
-      prizePool: 50000,
-      participants: 12,
-      maxParticipants: 32,
-      startTime: Date.now() + 7200000,
-      entryFee: 200,
-    },
-    {
-      id: '3',
-      name: '周末大乱斗',
-      status: 'finished',
-      prizePool: 100000,
-      participants: 128,
+      id: 'challenge-1',
+      name: 'Challenge Arena #1',
+      type: 'challenge',
+      status: 'registration',
+      prizePool: 5000,
+      participants: [],
       maxParticipants: 128,
-      startTime: Date.now() - 86400000,
-      endTime: Date.now() - 43200000,
+      startTime: Date.now() + 300000,
       entryFee: 100,
-      winners: [],
+      currentRound: 'round128',
+      matches: [],
+      qualifiedAgents: [],
+    },
+    {
+      id: 'daily-1',
+      name: 'Daily Championship',
+      type: 'daily',
+      status: 'upcoming',
+      prizePool: 100000,
+      participants: [],
+      maxParticipants: 128,
+      startTime: Date.now() + 3600000,
+      entryFee: 1000,
+      currentRound: 'round128',
+      matches: [],
+      qualifiedAgents: [],
+    },
+    {
+      id: 'weekly-1',
+      name: 'Weekly Grand Championship',
+      type: 'weekly',
+      status: 'upcoming',
+      prizePool: 1000000,
+      participants: [],
+      maxParticipants: 128,
+      startTime: Date.now() + 86400000,
+      entryFee: 10000,
+      currentRound: 'round128',
+      matches: [],
+      qualifiedAgents: [],
     },
   ],
+
+  // 锦标赛报名记录
+  tournamentEntries: [],
+
+  // 锦标赛历史
+  tournamentHistory: [],
+
+  // 锦标赛自动报名设置
+  tournamentAutoSettings: {
+    enabled: false,
+    challenge: { enabled: false, autoSelect: true },
+    daily: { enabled: false, autoSelect: true },
+    weekly: { enabled: false, autoSelect: true },
+  },
 
   // 系统全局轮次计数（所有并行竞技场总和）
   totalSystemRounds: 5, // 从个位数开始
@@ -673,14 +697,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // ==================== 锦标赛系统实现 ====================
-  tournamentEntries: [],
-  tournamentHistory: [],
-  tournamentAutoSettings: {
-    enabled: false,
-    challenge: { enabled: false, autoSelect: true },
-    daily: { enabled: false, autoSelect: true },
-    weekly: { enabled: false, autoSelect: true },
-  },
 
   // 报名锦标赛
   registerForTournament: (tournamentId: string, agentId: string) => {
