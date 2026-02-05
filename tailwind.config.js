@@ -70,6 +70,7 @@ export default {
         'fade-in': 'fade-in 0.3s ease-out',
         'scale-in': 'scale-in 0.3s ease-out',
         'border-flow': 'border-flow 3s linear infinite',
+        'marquee': 'marquee 60s linear infinite',
       },
       keyframes: {
         'pulse-glow': {
@@ -117,6 +118,10 @@ export default {
         'border-flow': {
           '0%': { backgroundPosition: '0% 50%' },
           '100%': { backgroundPosition: '200% 50%' },
+        },
+        'marquee': {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
       },
       boxShadow: {
