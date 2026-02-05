@@ -5,7 +5,7 @@ import {
   TournamentType, TournamentStatus, TournamentRound, TournamentEntry, TournamentMatch,
   TournamentAutoSettings, TournamentHistory
 } from '../types';
-import { generateRandomAgent, generateSystemAgents } from '../utils/agentGenerator';
+import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
 
 interface GameStore {
   // 钱包状态
@@ -42,6 +42,7 @@ interface GameStore {
   registerForTournament: (tournamentId: string, agentId: string) => { success: boolean; message: string };
   setTournamentAutoSettings: (settings: Partial<TournamentAutoSettings>) => void;
   executeAutoTournamentRegistration: () => void;
+  fillTournamentWithSystemAgents: (tournamentId: string) => void;
   startTournament: (tournamentId: string) => void;
   advanceTournamentRound: (tournamentId: string) => void;
   getQualifiedAgentsForTournament: (tournamentId: string) => Agent[];
@@ -841,15 +842,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
+  // 填充锦标赛系统Agents
+  fillTournamentWithSystemAgents: (tournamentId: string) => {
+    const { tournaments } = get();
+    const tournament = tournaments.find((t) => t.id === tournamentId);
+    if (!tournament) return;
+
+    const currentCount = tournament.participants.length;
+    const neededCount = tournament.maxParticipants - currentCount;
+
+    if (neededCount <= 0) return;
+
+    // 从预生成的1000个系统Agents中选取
+    const systemAgents = TOURNAMENT_SYSTEM_AGENTS.slice(0, neededCount).map((agent, index) => ({
+      ...agent,
+      id: `sys-${tournamentId}-${index}-${agent.id}`,
+    }));
+
+    // 创建系统报名记录
+    const systemEntries: TournamentEntry[] = systemAgents.map((agent) => ({
+      id: `sys-entry-${tournamentId}-${agent.id}`,
+      tournamentId,
+      userId: 'system',
+      agentId: agent.id,
+      agent,
+      entryFee: tournament.entryFee,
+      registeredAt: Date.now(),
+    }));
+
+    set((state) => ({
+      tournaments: state.tournaments.map((t) =>
+        t.id === tournamentId
+          ? { ...t, participants: [...t.participants, ...systemAgents] }
+          : t
+      ),
+      tournamentEntries: [...state.tournamentEntries, ...systemEntries],
+    }));
+  },
+
   // 开始锦标赛
   startTournament: (tournamentId: string) => {
     const { tournaments } = get();
     const tournament = tournaments.find((t) => t.id === tournamentId);
     if (!tournament) return;
 
+    // 先填充系统Agents确保满员
+    get().fillTournamentWithSystemAgents(tournamentId);
+
+    // 重新获取更新后的锦标赛数据
+    const updatedTournament = get().tournaments.find((t) => t.id === tournamentId);
+    if (!updatedTournament) return;
+
     // 生成对阵表
     const matches: TournamentMatch[] = [];
-    const participants = [...tournament.participants];
+    const participants = [...updatedTournament.participants];
 
     // 128进32 (第一轮，128人分成32组，每组4人，取1人)
     for (let i = 0; i < 32; i++) {

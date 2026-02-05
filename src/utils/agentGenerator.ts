@@ -82,3 +82,37 @@ export const generateRandomPosition = (centerX: number, centerY: number, maxRadi
     y: centerY + Math.sin(angle) * radius,
   };
 };
+
+// 生成锦标赛系统 Agents（带足够余额报名）
+export const generateTournamentAgents = (count: number, startIndex: number = 0): Agent[] => {
+  const tournamentPrefixes = ['冠军', '王者', '传说', '神话', '至尊', '无敌', '神话', '传奇', '史诗', '英雄'];
+  const tournamentSuffixes = ['战神', '斗神', '武神', '剑圣', '刀皇', '枪神', '拳霸', '影王', '魔君', '帝尊'];
+
+  return Array.from({ length: count }, (_, i) => {
+    const index = startIndex + i;
+    const prefix = tournamentPrefixes[index % tournamentPrefixes.length];
+    const suffix = tournamentSuffixes[Math.floor(index / tournamentPrefixes.length) % tournamentSuffixes.length];
+
+    const agent: Agent = {
+      id: `tournament-${index}-${Math.random().toString(36).substr(2, 6)}`,
+      name: `${prefix}${suffix}#${index + 1}`,
+      color: agentColors[index % agentColors.length],
+      hp: 100 + Math.floor(Math.random() * 100),
+      maxHp: 150 + Math.floor(Math.random() * 100),
+      attack: 15 + Math.floor(Math.random() * 15),
+      defense: 8 + Math.floor(Math.random() * 8),
+      balance: 500 + Math.floor(Math.random() * 500), // 500-1000 余额，足够报名
+      wins: Math.floor(Math.random() * 50),
+      losses: Math.floor(Math.random() * 30),
+      kills: Math.floor(Math.random() * 80),
+      earnings: Math.floor(Math.random() * 5000),
+      status: 'idle',
+      isPlayer: false,
+      pixelStyle: index % 8,
+    };
+    return agent;
+  });
+};
+
+// 预生成1000个锦标赛系统Agents
+export const TOURNAMENT_SYSTEM_AGENTS: Agent[] = generateTournamentAgents(1000);
