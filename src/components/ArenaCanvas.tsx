@@ -109,21 +109,39 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           timestamp: Date.now(),
         }]);
 
-        // 添加目标余额减少效果（红色）
+        // 计算内外侧位置（中心为 50, 50）
+        const getInnerOuterPosition = (pos: {x: number, y: number}, isInner: boolean) => {
+          const centerX = 50;
+          const centerY = 50;
+          const offset = isInner ? -8 : 8; // 内侧向中心偏移8%，外侧远离中心8%
+          const dx = pos.x - centerX;
+          const dy = pos.y - centerY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance === 0) return pos;
+          const ratio = (distance + offset) / distance;
+          return {
+            x: centerX + dx * ratio,
+            y: centerY + dy * ratio,
+          };
+        };
+
+        // 添加目标余额减少效果（红色 - 外侧显示）
+        const targetOuterPos = getInnerOuterPosition(targetPos, false);
         setBalanceChanges(prev => [...prev, {
           id: Math.random().toString(36).substr(2, 9),
-          x: targetPos.x,
-          y: targetPos.y,
+          x: targetOuterPos.x,
+          y: targetOuterPos.y,
           amount: lootAmount,
           isGain: false,
           timestamp: Date.now(),
         }]);
 
-        // 添加攻击者余额增加效果（绿色）
+        // 添加攻击者余额增加效果（绿色 - 内侧显示）
+        const attackerInnerPos = getInnerOuterPosition(attackerPos, true);
         setBalanceChanges(prev => [...prev, {
           id: Math.random().toString(36).substr(2, 9),
-          x: attackerPos.x,
-          y: attackerPos.y,
+          x: attackerInnerPos.x,
+          y: attackerInnerPos.y,
           amount: lootAmount,
           isGain: true,
           timestamp: Date.now(),
@@ -199,10 +217,10 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     return () => clearInterval(cleanup);
   }, []);
   
-  // 获取坑位位置（百分比）
+  // 获取坑位位置（百分比）- 扩大半径避免遮挡
   const getSlotPosition = (index: number, total: number) => {
     const angle = (index / Math.max(total, 10)) * Math.PI * 2 - Math.PI / 2;
-    const radius = 38;
+    const radius = 42; // 从 38 增加到 42，扩大布局
     return {
       x: 50 + Math.cos(angle) * radius,
       y: 50 + Math.sin(angle) * radius,
