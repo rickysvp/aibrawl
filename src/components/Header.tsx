@@ -2,12 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { Wallet, LogOut, Zap, Sparkles, GitBranch } from 'lucide-react';
 import versionData from '../../version.json';
+import ConnectWalletModal from './ConnectWalletModal';
 
 const Header: React.FC = () => {
   const { wallet, connectWallet, disconnectWallet } = useGameStore();
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [showVersion, setShowVersion] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+
+  const handleConnect = (type: 'twitter' | 'google' | 'wallet') => {
+    // 目前都调用相同的连接逻辑，后续可以根据类型区分
+    connectWallet();
+    setShowConnectModal(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -157,22 +165,29 @@ const Header: React.FC = () => {
             </>
           ) : (
             <button
-              onClick={connectWallet}
+              onClick={() => setShowConnectModal(true)}
               className="group relative px-8 py-3 overflow-hidden rounded-xl transition-all duration-300"
             >
               {/* 背景渐变 */}
               <div className="absolute inset-0 bg-gradient-to-r from-luxury-purple via-luxury-purple-light to-luxury-cyan opacity-90 group-hover:opacity-100 transition-opacity" />
-              
+
               {/* 闪光效果 */}
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-              
+
               {/* 内容 */}
               <span className="relative flex items-center gap-2 text-white font-semibold font-display tracking-wide">
                 <Wallet className="w-5 h-5" />
-                连接钱包
+                Connect
               </span>
             </button>
           )}
+
+      {/* 连接钱包弹窗 */}
+      <ConnectWalletModal
+        isOpen={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        onConnect={handleConnect}
+      />
         </div>
       </div>
       
