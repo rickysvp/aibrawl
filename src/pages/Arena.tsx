@@ -114,21 +114,33 @@ const Arena: React.FC = () => {
         const currentMyAgents = currentState.myAgents;
         const currentSystemAgents = currentState.systemAgents;
         
-        // 随机选择10个参赛者
-        const availableAgents: Agent[] = [
-          ...currentMyAgents.filter(a => a.status === 'in_arena'),
-          ...currentSystemAgents.filter(a => a.status === 'in_arena' && a.hp > 0),
-        ];
+        // 优先选择用户的 Agents
+        const myArenaAgents = currentMyAgents.filter(a => a.status === 'in_arena');
+        const systemArenaAgents = currentSystemAgents.filter(a => a.status === 'in_arena' && a.hp > 0);
         
         // 如果没有足够的参赛者，等待后重试
-        if (availableAgents.length < 2) {
+        if (myArenaAgents.length + systemArenaAgents.length < 2) {
           console.log('等待更多参赛者...');
           await new Promise(resolve => setTimeout(resolve, 3000));
           continue;
         }
         
-        const shuffled = [...availableAgents].sort(() => Math.random() - 0.5);
-        const participants = shuffled.slice(0, 10);
+        // 优先选择用户 Agents，填满剩余位置用系统 Agents
+        let participants: Agent[] = [];
+        
+        // 先加入所有用户的 Agents（最多10个）
+        const shuffledMyAgents = [...myArenaAgents].sort(() => Math.random() - 0.5);
+        participants = shuffledMyAgents.slice(0, 10);
+        
+        // 如果用户 Agents 不足10个，用系统 Agents 补足
+        if (participants.length < 10) {
+          const needed = 10 - participants.length;
+          const shuffledSystem = [...systemArenaAgents].sort(() => Math.random() - 0.5);
+          participants = [...participants, ...shuffledSystem.slice(0, needed)];
+        }
+        
+        // 再次随机打乱，但确保用户 Agents 有机会排在前面显示
+        participants = participants.sort(() => Math.random() - 0.5);
         
         // 重置参赛者状态
         participants.forEach(p => {

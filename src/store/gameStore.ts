@@ -155,7 +155,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   systemAgents: [],
   
   initializeArena: () => {
-    const systemAgents = generateSystemAgents(100);
+    const systemAgents = generateSystemAgents(1000);
     set({ systemAgents });
   },
   

@@ -230,13 +230,14 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         const isAttacking = participant && attackingAgents.has(participant.id);
         const isHurt = participant && hurtAgents.has(participant.id);
         const isDead = participant && participant.hp <= 0;
+        const isMyAgent = participant?.isPlayer;
         
         return (
           <div
             key={index}
             className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
               isLit ? 'scale-110 z-10' : 'scale-100'
-            }`}
+            } ${isMyAgent ? 'z-20' : 'z-10'}`}
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
           >
             {/* 选中光环 */}
@@ -247,12 +248,22 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               </div>
             )}
             
+            {/* 用户 Agent 特殊光环 */}
+            {isMyAgent && !isDead && (
+              <div className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 pointer-events-none">
+                <div className="absolute inset-0 bg-luxury-cyan/30 rounded-full animate-pulse" style={{ animationDuration: '2s' }} />
+                <div className="absolute -inset-1 border-2 border-luxury-cyan/50 rounded-2xl animate-ping" style={{ animationDuration: '3s' }} />
+              </div>
+            )}
+            
             {/* 坑位底座 */}
             <div 
               className={`relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                 isLit 
                   ? 'bg-luxury-gold/20 shadow-lg shadow-luxury-gold/30' 
-                  : 'bg-void-panel/80'
+                  : isMyAgent 
+                    ? 'bg-luxury-cyan/20 shadow-lg shadow-luxury-cyan/30' 
+                    : 'bg-void-panel/80'
               } ${
                 participant 
                   ? 'border-2' 
@@ -263,9 +274,11 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
                 isHurt ? 'animate-shake' : ''
               }`}
               style={{ 
-                borderColor: participant?.color || 'rgba(255,255,255,0.1)',
+                borderColor: isMyAgent ? '#22d3ee' : (participant?.color || 'rgba(255,255,255,0.1)'),
                 boxShadow: participant && !isDead 
-                  ? `0 0 20px ${participant.color}30, inset 0 0 20px ${participant.color}10` 
+                  ? isMyAgent 
+                    ? '0 0 30px rgba(34, 211, 238, 0.4), inset 0 0 20px rgba(34, 211, 238, 0.2)' 
+                    : `0 0 20px ${participant.color}30, inset 0 0 20px ${participant.color}10`
                   : 'none'
               }}
             >
@@ -287,19 +300,30 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
                   <span className="text-2xl">💀</span>
                 </div>
               )}
+              
+              {/* 我的 Agent 标记 */}
+              {isMyAgent && !isDead && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-luxury-cyan rounded-full flex items-center justify-center border-2 border-void">
+                  <span className="text-[8px] font-bold text-void">我</span>
+                </div>
+              )}
             </div>
             
             {/* Agent 名称 */}
             {participant && (
               <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                 <span 
-                  className="text-[10px] font-medium px-2 py-1 rounded-lg bg-void-panel/80 border border-white/5"
+                  className={`text-[10px] font-medium px-2 py-1 rounded-lg border ${
+                    isMyAgent 
+                      ? 'bg-luxury-cyan/20 border-luxury-cyan/50 text-luxury-cyan' 
+                      : 'bg-void-panel/80 border-white/5'
+                  }`}
                   style={{ 
-                    color: isDead ? '#666' : participant.color,
-                    textShadow: isDead ? 'none' : `0 0 10px ${participant.color}60`
+                    color: isDead ? '#666' : (isMyAgent ? '#22d3ee' : participant.color),
+                    textShadow: isDead ? 'none' : `0 0 10px ${isMyAgent ? '#22d3ee' : participant.color}60`
                   }}
                 >
-                  {participant.name.slice(0, 8)}
+                  {isMyAgent ? '👤 ' : ''}{participant.name.slice(0, 8)}
                 </span>
               </div>
             )}
