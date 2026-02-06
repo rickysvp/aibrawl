@@ -6,23 +6,12 @@ import ConnectWalletModal from './ConnectWalletModal';
 import { languages } from '../i18n';
 
 const Header: React.FC = () => {
-  const { wallet, connectWallet, disconnectWallet, myAgents, systemAgents, getTotalSystemRounds } = useGameStore();
+  const { wallet, connectWallet, disconnectWallet, myAgents, systemAgents, totalSystemRounds } = useGameStore();
   const { t, i18n } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [displayRound, setDisplayRound] = useState(1);
-
-  // 动态计算当前轮次
-  useEffect(() => {
-    const updateRound = () => {
-      setDisplayRound(getTotalSystemRounds());
-    };
-    updateRound();
-    const interval = setInterval(updateRound, 200);
-    return () => clearInterval(interval);
-  }, [getTotalSystemRounds]);
 
   const handleLanguageChange = (code: string) => {
     i18n.changeLanguage(code);
@@ -82,7 +71,7 @@ const Header: React.FC = () => {
               </div>
               <div>
                 <p className="text-[10px] text-white/40 uppercase tracking-wider">Round</p>
-                <p className="text-sm font-bold text-luxury-cyan font-mono">{displayRound.toLocaleString()}</p>
+                <p className="text-sm font-bold text-luxury-cyan font-mono">{totalSystemRounds.toLocaleString()}</p>
               </div>
             </div>
           </div>

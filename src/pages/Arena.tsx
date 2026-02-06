@@ -186,8 +186,10 @@ const Arena: React.FC = () => {
         incrementRound();
         incrementSystemRound(); // 增加系统全局轮次计数
         
-        // 获取当前系统总轮次并固定为本次战斗的轮次
-        const currentSystemRound = useGameStore.getState().getTotalSystemRounds();
+        // 使用更新后的系统总轮次作为本次战斗的轮次
+        // 注意：incrementSystemRound已经更新了totalSystemRounds，但React状态可能还没同步
+        // 所以我们使用useGameStore.getState().totalSystemRounds获取最新值
+        const currentSystemRound = useGameStore.getState().totalSystemRounds;
         setDisplayBattleRound(currentSystemRound);
         
         // 获取当前最新的 agents 状态

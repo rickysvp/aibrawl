@@ -7,6 +7,17 @@
 
 ---
 
+## [1.8.7] - 2026-02-06
+
+### 修复
+- 修复轮次乱跳问题
+- 移除 getTotalSystemRounds() 中的随机计算逻辑
+- Top Bar Round 直接显示 totalSystemRounds，确保稳定递增
+- BATTLE 标题轮次使用固定的 totalSystemRounds 值
+- 每一轮战斗有固定的轮次编号，便于追溯
+
+---
+
 ## [1.8.6] - 2026-02-06
 
 ### 优化
