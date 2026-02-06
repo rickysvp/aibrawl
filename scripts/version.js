@@ -9,25 +9,47 @@
  *   node scripts/version.js 1.2.3  - 设置指定版本
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const versionFile = path.join(__dirname, '..', 'version.json');
 const packageFile = path.join(__dirname, '..', 'package.json');
 
-function readVersion() {
-  const data = fs.readFileSync(versionFile, 'utf8');
-  return JSON.parse(data);
+function readPackageVersion() {
+  const data = fs.readFileSync(packageFile, 'utf8');
+  const packageData = JSON.parse(data);
+  return packageData.version;
 }
 
-function writeVersion(versionData) {
-  fs.writeFileSync(versionFile, JSON.stringify(versionData, null, 2) + '\n');
+function writeVersion(version) {
+  // 更新 package.json
+  const packageData = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+  packageData.version = version;
+  fs.writeFileSync(packageFile, JSON.stringify(packageData, null, 2) + '\n');
   
-  // 同步更新 package.json
-  if (fs.existsSync(packageFile)) {
-    const packageData = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
-    packageData.version = versionData.version;
-    fs.writeFileSync(packageFile, JSON.stringify(packageData, null, 2) + '\n');
+  // 同步更新 version.json（如果存在）
+  if (fs.existsSync(versionFile)) {
+    const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+    versionData.version = version;
+    versionData.releaseDate = new Date().toISOString().split('T')[0];
+    
+    // 添加变更日志条目
+    const changelogEntry = {
+      version: version,
+      date: versionData.releaseDate,
+      changes: ['版本更新']
+    };
+    
+    if (!versionData.changelog) {
+      versionData.changelog = [];
+    }
+    versionData.changelog.unshift(changelogEntry);
+    
+    fs.writeFileSync(versionFile, JSON.stringify(versionData, null, 2) + '\n');
   }
 }
 
@@ -61,11 +83,10 @@ function validateVersion(version) {
 
 function main() {
   const args = process.argv.slice(2);
+  const currentVersion = readPackageVersion();
   
   if (args.length === 0) {
-    // 显示当前版本
-    const versionData = readVersion();
-    console.log(`\n🎮 AIrena 当前版本: v${versionData.version}\n`);
+    console.log(`\n🎮 AIrena 当前版本: v${currentVersion}\n`);
     console.log('用法:');
     console.log('  node scripts/version.js patch  - 更新补丁版本');
     console.log('  node scripts/version.js minor  - 更新次要版本');
@@ -74,14 +95,11 @@ function main() {
     return;
   }
   
-  const versionData = readVersion();
-  const oldVersion = versionData.version;
+  const arg = args[0];
   let newVersion;
   
-  const arg = args[0];
-  
   if (['patch', 'minor', 'major'].includes(arg)) {
-    newVersion = bumpVersion(oldVersion, arg);
+    newVersion = bumpVersion(currentVersion, arg);
   } else if (validateVersion(arg)) {
     newVersion = arg;
   } else {
@@ -90,23 +108,10 @@ function main() {
     process.exit(1);
   }
   
-  // 更新版本数据
-  versionData.version = newVersion;
-  versionData.releaseDate = new Date().toISOString().split('T')[0];
-  
-  // 添加变更日志条目
-  const changelogEntry = {
-    version: newVersion,
-    date: versionData.releaseDate,
-    changes: args[1] ? [args[1]] : ['版本更新']
-  };
-  
-  versionData.changelog.unshift(changelogEntry);
-  
   // 写入文件
-  writeVersion(versionData);
+  writeVersion(newVersion);
   
-  console.log(`\n✅ 版本已更新: v${oldVersion} -> v${newVersion}\n`);
+  console.log(`\n✅ 版本已更新: v${currentVersion} -> v${newVersion}\n`);
   console.log('下一步操作:');
   console.log('  1. git add .');
   console.log(`  2. git commit -m "Release v${newVersion}"`);

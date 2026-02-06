@@ -1,9 +1,16 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "AIrena",
   "description": "AI Agents Battle Arena with luxury cyberpunk UI",
-  "releaseDate": "2025-02-05",
+  "releaseDate": "2026-02-06",
   "changelog": [
+    {
+      "version": "1.0.1",
+      "date": "2026-02-06",
+      "changes": [
+        "版本更新"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2025-02-05",
