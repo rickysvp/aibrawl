@@ -135,59 +135,67 @@ const AgentDetailModal: React.FC<AgentDetailModalProps> = ({ agent, isOpen, onCl
 
               {/* 内容区域 - 可滚动 */}
               <div className="flex-1 overflow-y-auto p-6">
-                {/* 放大的NFT形象 */}
-                <div className="flex justify-center mb-6">
+                {/* NFT形象 + 余额/利润 布局 */}
+                <div className="flex gap-4 mb-6">
+                  {/* NFT形象 - 左侧 */}
                   <div
-                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl flex items-center justify-center"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center flex-shrink-0"
                     style={{
                       background: `linear-gradient(135deg, ${rarity.color}40, ${rarity.color}60)`,
-                      border: `4px solid ${rarity.color}`,
-                      boxShadow: `0 0 40px ${rarity.color}40`
+                      border: `3px solid ${rarity.color}`,
+                      boxShadow: `0 0 30px ${rarity.color}40`
                     }}
                   >
-                    <PixelAgent agent={agent} size={96} />
+                    <PixelAgent agent={agent} size={80} />
+                  </div>
+
+                  {/* 余额和利润 - 右侧上下叠 */}
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="bg-white/5 rounded-xl p-3 flex items-center gap-3">
+                      <Wallet className="w-5 h-5 text-luxury-gold" />
+                      <div>
+                        <p className="text-xs text-white/40">余额</p>
+                        <p className="text-lg font-bold text-luxury-gold font-mono">{agent.balance.toFixed(0)} MON</p>
+                      </div>
+                    </div>
+                    <div className="bg-white/5 rounded-xl p-3 flex items-center gap-3">
+                      <TrendingUp className={`w-5 h-5 ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`} />
+                      <div>
+                        <p className="text-xs text-white/40">净利润</p>
+                        <p className={`text-lg font-bold font-mono ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
+                          {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit.toLocaleString()} MON
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* 核心数据 */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <div className="bg-white/5 rounded-xl p-3 text-center">
-                    <Wallet className="w-5 h-5 mx-auto text-luxury-gold mb-1" />
-                    <p className="text-lg font-bold text-luxury-gold font-mono">{agent.balance.toFixed(0)}</p>
-                    <p className="text-xs text-white/40">余额</p>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-3 text-center">
-                    <TrendingUp className={`w-5 h-5 mx-auto mb-1 ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`} />
-                    <p className={`text-lg font-bold font-mono ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
-                      {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-white/40">净利润</p>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-3 text-center">
-                    <Trophy className="w-5 h-5 mx-auto text-luxury-gold mb-1" />
-                    <p className="text-lg font-bold text-luxury-gold font-mono">{agent.tournamentWins}</p>
-                    <p className="text-xs text-white/40">冠军</p>
-                  </div>
-                </div>
-
-                {/* 场次和胜率 - 同一行 */}
-                <div className="flex items-center justify-center gap-8 bg-white/5 rounded-xl p-4 mb-6">
+                {/* 场次、胜率、冠军 - 同一行 */}
+                <div className="flex items-center justify-center gap-6 sm:gap-8 bg-white/5 rounded-xl p-4 mb-6">
                   <div className="text-center">
-                    <div className="flex items-center gap-2 justify-center mb-1">
-                      <Swords className="w-5 h-5 text-luxury-cyan" />
-                      <span className="text-2xl font-bold text-white font-mono">{agent.totalBattles}</span>
+                    <div className="flex items-center gap-1.5 justify-center mb-1">
+                      <Swords className="w-4 h-4 sm:w-5 sm:h-5 text-luxury-cyan" />
+                      <span className="text-xl sm:text-2xl font-bold text-white font-mono">{agent.totalBattles}</span>
                     </div>
                     <p className="text-xs text-white/40">总场次</p>
                   </div>
-                  <div className="w-px h-10 bg-white/10" />
+                  <div className="w-px h-8 sm:h-10 bg-white/10" />
                   <div className="text-center">
-                    <div className="flex items-center gap-2 justify-center mb-1">
-                      <Target className={`w-5 h-5 ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`} />
-                      <span className={`text-2xl font-bold font-mono ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`}>
+                    <div className="flex items-center gap-1.5 justify-center mb-1">
+                      <Target className={`w-4 h-4 sm:w-5 sm:h-5 ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`} />
+                      <span className={`text-xl sm:text-2xl font-bold font-mono ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`}>
                         {agent.winRate}%
                       </span>
                     </div>
                     <p className="text-xs text-white/40">胜率</p>
+                  </div>
+                  <div className="w-px h-8 sm:h-10 bg-white/10" />
+                  <div className="text-center">
+                    <div className="flex items-center gap-1.5 justify-center mb-1">
+                      <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-luxury-gold" />
+                      <span className="text-xl sm:text-2xl font-bold text-luxury-gold font-mono">{agent.tournamentWins}</span>
+                    </div>
+                    <p className="text-xs text-white/40">冠军</p>
                   </div>
                 </div>
 
