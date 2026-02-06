@@ -23,7 +23,6 @@ const generateTop100 = () => {
 
 // 跑马灯组件
 const LeaderboardMarquee: React.FC = () => {
-  const { t } = useTranslation();
   const top100 = useMemo(() => generateTop100(), []);
   const navigate = useNavigate();
 
@@ -370,7 +369,6 @@ const Arena: React.FC = () => {
   // 使用 ref 中的状态传递给子组件
   const currentPhase = timerStateRef.current.phase;
   const currentCountdown = timerStateRef.current.countdown;
-  const currentParticipants = timerStateRef.current.participants;
   const currentSelectedSlots = timerStateRef.current.selectedSlots;
 
   // 使用系统全局轮次计数 - 动态计算

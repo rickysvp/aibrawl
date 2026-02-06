@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import { 
@@ -22,16 +22,8 @@ import {
   CheckCircle,
   Loader2,
   Search,
-  Filter,
   Download,
-  ExternalLink,
-  Settings,
-  Bell,
-  Shield,
-  LogOut,
-  Maximize2,
-  Minimize2,
-  Zap
+  ExternalLink
 } from 'lucide-react';
 
 interface Transaction {
@@ -71,7 +63,7 @@ const MON_PRICE_CHANGE_24H = 5.23;
 
 const WalletPage: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { wallet, myAgents, connectWallet, disconnectWallet } = useGameStore();
+  const { wallet, myAgents, connectWallet } = useGameStore();
   
   // 弹窗状态
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -82,7 +74,6 @@ const WalletPage: React.FC = () => {
   const [showInviteDetailModal, setShowInviteDetailModal] = useState(false);
   const [showTxDetailModal, setShowTxDetailModal] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-  const [showAssetChart, setShowAssetChart] = useState(false);
   
   // 交易记录筛选
   const [txFilter, setTxFilter] = useState<'all' | 'deposit' | 'withdraw' | 'swap' | 'battle'>('all');

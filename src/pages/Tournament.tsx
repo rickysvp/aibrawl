@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import TournamentBracket from '../components/TournamentBracket';
-import type { Tournament as TournamentType, TournamentMatch, Agent } from '../types';
+import type { Tournament as TournamentType } from '../types';
 import {
   Trophy,
   Clock,
@@ -18,16 +18,7 @@ import {
   Settings,
   CheckCircle,
   AlertCircle,
-  TrendingUp,
-  Award,
-  Flame,
-  Crown,
-  Medal,
-  Sparkles,
-  ArrowRight,
-  Plus,
-  Minus,
-  Info
+  Crown
 } from 'lucide-react';
 
 const Tournament: React.FC = () => {
@@ -38,11 +29,9 @@ const Tournament: React.FC = () => {
     tournamentEntries,
     tournamentHistory,
     tournamentAutoSettings,
-    myAgents,
     registerForTournament,
     setTournamentAutoSettings,
     getQualifiedAgentsForTournament,
-    arena,
     connectWallet
   } = useGameStore();
 

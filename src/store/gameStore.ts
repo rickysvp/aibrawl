@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import {
   Agent, BattleLog, ArenaState, WalletState, Tournament, RoundPhase,
   LiquidityPool, LiquidityStake, PredictionMarket, PredictionBet, AutoBetRule,
-  TournamentType, TournamentStatus, TournamentRound, TournamentEntry, TournamentMatch,
+  TournamentRound, TournamentEntry, TournamentMatch,
   TournamentAutoSettings, TournamentHistory
 } from '../types';
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
@@ -79,6 +79,7 @@ interface GameStore {
   updateOdds: (marketId: string) => void;
   setAutoBetRule: (rule: Partial<AutoBetRule>) => void;
   executeAutoBet: () => void;
+  createPredictionMarketForTournament: (tournamentId: string, betType: 'semifinal' | 'final') => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -407,7 +408,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   stakeLiquidity: (amount: number) => {
-    const { wallet, liquidityPool, userStakes } = get();
+    const { wallet } = get();
 
     if (!wallet.connected) {
       return { success: false, message: 'Please connect wallet first' };
@@ -447,7 +448,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   unstakeLiquidity: (stakeId: string) => {
-    const { wallet, userStakes, liquidityPool } = get();
+    const { userStakes } = get();
     const stake = userStakes.find((s) => s.id === stakeId);
 
     if (!stake) {
@@ -536,7 +537,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   placePredictionBet: (marketId: string, agentId: string, amount: number, betType: 'semifinal' | 'final' | 'match') => {
-    const { wallet, predictionMarkets, userPredictions } = get();
+    const { wallet, predictionMarkets } = get();
 
     if (!wallet.connected) {
       return { success: false, message: 'Please connect wallet first' };
@@ -631,7 +632,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const updatedPredictions = userPredictions.map((bet) => {
       if (bet.marketId === marketId) {
         const won = bet.predictedAgentId === winnerId;
-        return { ...bet, status: won ? 'won' : 'lost' };
+        return { ...bet, status: (won ? 'won' : 'lost') as 'won' | 'lost' };
       }
       return bet;
     });
@@ -1031,8 +1032,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
           // 发放奖金
           const prizePool = tournament.prizePool;
           const championPrize = prizePool * 0.5; // 冠军50%
-          const runnerUpPrize = prizePool * 0.3; // 亚军30%
-          const thirdPlacePrize = prizePool * 0.2; // 季军20%
+          // const runnerUpPrize = prizePool * 0.3; // 亚军30%
+          // const thirdPlacePrize = prizePool * 0.2; // 季军20%
 
           // 记录历史
           const history: TournamentHistory = {
@@ -1253,7 +1254,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // 为锦标赛创建预测市场
   createPredictionMarketForTournament: (tournamentId: string, betType: 'semifinal' | 'final') => {
-    const { tournaments, predictionMarkets } = get();
+    const { tournaments } = get();
     const tournament = tournaments.find((t) => t.id === tournamentId);
     if (!tournament) return;
 

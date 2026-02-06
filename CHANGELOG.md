@@ -7,6 +7,23 @@
 
 ---
 
+## [1.8.4] - 2026-02-06
+
+### 修复
+- 全面修复 TypeScript 编译错误（共修复 48 个错误）
+- 修复所有组件中未使用的导入和变量
+- 修复 AgentCard.tsx 中未使用的 useGameStore 导入
+- 修复 Arena.tsx 中未使用的 t 和 currentParticipants 变量
+- 修复 PredictionMarket.tsx 中未使用的 autoBetRule 和 getStatusColor
+- 修复 Squad.tsx 中未使用的导入和 earnings 属性（改为 netProfit）
+- 修复 Tournament.tsx 中未使用的类型和导入
+- 修复 Wallet.tsx 中未使用的导入和变量
+- 修复 gameStore.ts 中的类型错误和未使用变量
+- 修复 agentGenerator.ts 中 Agent 类型缺少的属性
+- 添加 GameStore 接口中缺失的 createPredictionMarketForTournament 方法声明
+
+---
+
 ## [1.8.3] - 2026-02-06
 
 ### 修复

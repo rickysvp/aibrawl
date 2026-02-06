@@ -109,7 +109,7 @@ const generateBattleHistory = (wins: number, losses: number): BattleRecord[] => 
 };
 
 // 计算Agent统计数据
-const calculateAgentStats = (wins: number, losses: number, kills: number, history: BattleRecord[]) => {
+const calculateAgentStats = (wins: number, losses: number, _kills: number, history: BattleRecord[]) => {
   const totalBattles = wins + losses;
   const winRate = totalBattles > 0 ? Math.round((wins / totalBattles) * 100) : 0;
 
@@ -250,14 +250,27 @@ export const generateTournamentAgents = (count: number, startIndex: number = 0):
     const battleHistory = generateBattleHistory(wins, losses);
     const stats = calculateAgentStats(wins, losses, kills, battleHistory);
 
+    const attack = 15 + Math.floor(Math.random() * 15);
+    const defense = 8 + Math.floor(Math.random() * 8);
+    const crit = 10 + Math.floor(Math.random() * 10);
+    const hit = 12 + Math.floor(Math.random() * 12);
+    const agility = 10 + Math.floor(Math.random() * 10);
+    const totalStats = attack + defense + crit + hit + agility;
+    
     const agent: Agent = {
       id: `tournament-${index}-${Math.random().toString(36).substr(2, 6)}`,
       name: `${prefix}${suffix}#${index + 1}`,
+      nftId: index + 1,
       color: agentColors[index % agentColors.length],
       hp: 100 + Math.floor(Math.random() * 100),
       maxHp: 150 + Math.floor(Math.random() * 100),
-      attack: 15 + Math.floor(Math.random() * 15),
-      defense: 8 + Math.floor(Math.random() * 8),
+      attack,
+      defense,
+      crit,
+      hit,
+      agility,
+      totalStats,
+      rarity: ['common', 'rare', 'epic', 'legendary', 'mythic'][Math.floor(Math.random() * 5)] as Rarity,
       balance: 500 + Math.floor(Math.random() * 500), // 500-1000 余额，足够报名
       // 基础统计
       wins,

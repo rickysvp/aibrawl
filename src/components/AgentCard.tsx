@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Agent, Rarity } from '../types';
-import { useGameStore } from '../store/gameStore';
 import PixelAgent from './PixelAgent';
 import AgentDetailModal from './AgentDetailModal';
 import { 

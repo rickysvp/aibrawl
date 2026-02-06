@@ -20,7 +20,6 @@ const PredictionMarketPage: React.FC = () => {
     wallet,
     predictionMarkets,
     userPredictions,
-    autoBetRule,
     placePredictionBet,
     setAutoBetRule,
     systemAgents,
@@ -82,16 +81,6 @@ const PredictionMarketPage: React.FC = () => {
   const saveAutoBetSettings = () => {
     setAutoBetRule(autoBetSettings);
     showToast(t('prediction.autoBetSaved'), 'success');
-  };
-
-  // 获取市场状态颜色
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'text-luxury-green';
-      case 'closed': return 'text-luxury-amber';
-      case 'settled': return 'text-white/40';
-      default: return 'text-white/40';
-    }
   };
 
   // 获取市场状态文本

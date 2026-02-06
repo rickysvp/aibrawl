@@ -12,10 +12,8 @@ import {
   Swords,
   Wallet,
   Zap,
-  Coins,
   CheckSquare,
   Square,
-  LogIn,
   BatteryCharging,
   Rocket,
   Lock
@@ -191,7 +189,7 @@ const Squad: React.FC = () => {
   const canJoinArena = idleAgents.filter(a => a.balance > 0);
   
   const totalBalance = myAgents.reduce((sum, a) => sum + a.balance, 0);
-  const totalProfit = myAgents.reduce((sum, a) => sum + a.earnings, 0);
+  const totalProfit = myAgents.reduce((sum, a) => sum + a.netProfit, 0);
   const agentsTotalBalance = totalBalance;
   const profitPercentage = totalBalance > 0 ? (totalProfit / totalBalance) * 100 : 0;
   const avgWinRate = myAgents.length > 0
