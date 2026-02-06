@@ -6,6 +6,7 @@ import {
   TournamentAutoSettings, TournamentHistory
 } from '../types';
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
+import { useNotificationStore } from './notificationStore';
 
 interface GameStore {
   // 钱包状态
@@ -128,6 +129,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         avatar,
       }
     });
+    
+    useNotificationStore.getState().addNotification('success', `Connected as ${nickname}`, 'Wallet Connected');
   },
 
   disconnectWallet: () => {
@@ -153,11 +156,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { wallet, mintCost } = get();
     if (!wallet.connected || wallet.balance < mintCost) return null;
     
-    const newAgent = generateRandomAgent(true);
+    const newAgent = generateRandomAgent(true, true);
     set((state) => ({
       wallet: { ...state.wallet, balance: state.wallet.balance - mintCost },
       myAgents: [...state.myAgents, newAgent],
     }));
+    
+    useNotificationStore.getState().addNotification('success', `Minted ${newAgent.name} successfully`, 'Agent Minted');
     return newAgent;
   },
   
@@ -175,6 +180,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         a.id === agentId ? { ...a, balance: a.balance + amount } : a
       ),
     }));
+    
+    useNotificationStore.getState().addNotification('success', `Allocated ${amount} MON to agent`, 'Funds Allocated');
   },
   
   withdrawFunds: (agentId: string, amount: number) => {
@@ -191,6 +198,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         a.id === agentId ? { ...a, balance: a.balance - amount } : a
       ),
     }));
+    
+    useNotificationStore.getState().addNotification('success', `Withdrew ${amount} MON from agent`, 'Funds Withdrawn');
   },
   
   joinArena: (agentId: string) => {
@@ -202,6 +211,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         a.id === agentId ? { ...a, status: 'in_arena' } : a
       ),
     }));
+    
+    useNotificationStore.getState().addNotification('success', `${agent.name} joined the arena`, 'Arena Joined');
   },
   
   leaveArena: (agentId: string) => {
@@ -444,6 +455,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       userStakes: [...state.userStakes, newStake],
     }));
 
+    useNotificationStore.getState().addNotification('success', `Staked ${amount} MON successfully`, 'Liquidity Staked');
     return { success: true, message: 'Staked successfully' };
   },
 
@@ -474,11 +486,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       userStakes: state.userStakes.filter((s) => s.id !== stakeId),
     }));
 
+    const message = isEarly
+      ? `Unstaked with 20% early withdrawal penalty. Received ${returnAmount.toFixed(2)} MON + ${pendingRewards.toFixed(2)} rewards`
+      : `Unstaked successfully. Received ${returnAmount.toFixed(2)} MON + ${pendingRewards.toFixed(2)} rewards`;
+
+    useNotificationStore.getState().addNotification(isEarly ? 'warning' : 'success', message, 'Liquidity Unstaked');
+
     return {
       success: true,
-      message: isEarly
-        ? `Unstaked with 20% early withdrawal penalty. Received ${returnAmount.toFixed(2)} MON + ${pendingRewards.toFixed(2)} rewards`
-        : `Unstaked successfully. Received ${returnAmount.toFixed(2)} MON + ${pendingRewards.toFixed(2)} rewards`,
+      message,
     };
   },
 
@@ -511,6 +527,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       },
     }));
 
+    useNotificationStore.getState().addNotification('success', `Claimed ${totalRewards.toFixed(2)} MON rewards`, 'Rewards Claimed');
     return { success: true, amount: totalRewards, message: `Claimed ${totalRewards.toFixed(2)} MON rewards` };
   },
 
@@ -589,6 +606,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // 更新赔率
     get().updateOdds(marketId);
 
+    useNotificationStore.getState().addNotification('success', `Bet placed successfully. Potential win: ${potentialWin.toFixed(2)} MON`, 'Prediction Bet Placed');
     return { success: true, message: `Bet placed successfully. Potential win: ${potentialWin.toFixed(2)} MON` };
   },
 
@@ -794,6 +812,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ),
     }));
 
+    useNotificationStore.getState().addNotification('success', `Registered ${agent.name} for tournament`, 'Tournament Registration');
     return { success: true, message: 'Successfully registered for tournament' };
   },
 

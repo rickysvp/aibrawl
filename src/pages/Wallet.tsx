@@ -24,13 +24,8 @@ import {
   Search,
   Download,
   ExternalLink,
-  Pickaxe,
-  Sparkles,
-  Shield,
-  Zap,
-  ArrowRight
+  Pickaxe
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface Transaction {
   id: string;
@@ -805,6 +800,26 @@ const WalletPage: React.FC = () => {
     );
   };
 
+  if (!wallet.connected) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-gold/20 to-luxury-purple/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-6">
+            <Wallet className="w-10 h-10 text-luxury-gold" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('wallet.connectFirst')}</h2>
+          <p className="text-white/40 mb-8">{t('wallet.connectDesc') || 'Please connect your wallet to continue'}</p>
+          <button
+            onClick={() => connectWallet('wallet')}
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-luxury-gold to-luxury-purple text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            {t('wallet.connectWallet')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
@@ -818,113 +833,10 @@ const WalletPage: React.FC = () => {
           </div>
         )}
 
-        {/* 页面标题 */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxury-green/20 to-luxury-cyan/20 border border-luxury-green/30 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-luxury-green" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white font-display">{t('wallet.title')}</h1>
-              <p className="text-white/40 text-lg">{t('wallet.subtitle')}</p>
-            </div>
-          </div>
-        </div>
 
-        {!wallet.connected ? (
-          <>
-            {/* 页面标题 */}
-            <div className="text-center mb-12">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 mb-6"
-              >
-                <Sparkles className="w-4 h-4 text-luxury-gold" />
-                <span className="text-sm text-luxury-gold">{t('wallet.title')}</span>
-              </motion.div>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl md:text-5xl font-bold text-white mb-4"
-              >
-                {t('wallet.heroTitle') || '资产管理'}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-white/50 text-lg max-w-2xl mx-auto"
-              >
-                {t('wallet.heroDesc') || '安全便捷地管理你的数字资产'}
-              </motion.p>
-            </div>
 
-            {/* 特性展示 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
-            >
-              <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-gold/30 transition-colors">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-gold/20 to-luxury-amber/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Wallet className="w-7 h-7 text-luxury-gold" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.feature1') || '安全存储'}</h3>
-                <p className="text-white/40 text-sm">{t('wallet.feature1Desc') || '多重加密保护，资产安全无忧'}</p>
-              </div>
-              <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-purple/30 transition-colors">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Zap className="w-7 h-7 text-luxury-purple" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.feature2') || '快速交易'}</h3>
-                <p className="text-white/40 text-sm">{t('wallet.feature2Desc') || '秒级确认，低手续费'}</p>
-              </div>
-              <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-cyan/30 transition-colors">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-cyan/20 to-luxury-blue/20 border border-luxury-cyan/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <Shield className="w-7 h-7 text-luxury-cyan" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.feature3') || '隐私保护'}</h3>
-                <p className="text-white/40 text-sm">{t('wallet.feature3Desc') || '去中心化存储，掌控私钥'}</p>
-              </div>
-            </motion.div>
-
-            {/* 连接钱包卡片 */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="card-luxury rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-            >
-              {/* 背景装饰 */}
-              <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/5 via-transparent to-luxury-purple/5" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-luxury-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-              <div className="relative z-10">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-gold/20 to-luxury-purple/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-6">
-                  <Wallet className="w-10 h-10 text-luxury-gold" />
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{t('wallet.connectFirst')}</h2>
-                <p className="text-white/40 mb-8 max-w-md mx-auto">{t('wallet.connectDesc') || '连接钱包开始管理你的数字资产'}</p>
-                <button
-                  onClick={() => connectWallet('wallet')}
-                  className="group relative px-8 py-4 rounded-xl overflow-hidden inline-flex items-center gap-2"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-luxury-gold via-luxury-amber to-luxury-purple" />
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                  <span className="relative text-white font-semibold">{t('wallet.connectWallet')}</span>
-                  <ArrowRight className="relative w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </motion.div>
-          </>
-        ) : (
-          <>
-            {/* 资产概览卡片 */}
-            <div className="card-luxury rounded-2xl overflow-hidden mb-6 border-luxury-gold/20">
+        {/* 资产概览卡片 */}
+        <div className="card-luxury rounded-2xl overflow-hidden mb-6 border-luxury-gold/20">
               <div className="px-8 py-6 bg-gradient-to-br from-luxury-gold/5 to-transparent">
                 {/* 总资产和操作按钮 */}
                 <div className="flex items-center justify-between mb-6">
@@ -941,18 +853,6 @@ const WalletPage: React.FC = () => {
                       <span className="text-xl text-white/60">$MON</span>
                     </div>
                     <p className="text-lg text-white/40 mt-1">≈ ${toUSDT(totalAssets)} USDT</p>
-                    {/* 钱包地址 */}
-                    <div className="flex items-center gap-2 mt-3">
-                      <code className="text-sm text-luxury-cyan font-mono bg-void-light/50 px-3 py-1.5 rounded-lg">
-                        {wallet.address}
-                      </code>
-                      <button
-                        onClick={copyAddress}
-                        className="p-2 rounded-lg bg-void-light/50 text-white/40 hover:text-white hover:bg-void-light transition-colors"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
 
                   {/* 存款/兑换/提现按钮 */}
@@ -998,17 +898,18 @@ const WalletPage: React.FC = () => {
                         <TrendingUp className="w-4 h-4" />
                         <span className="text-xs uppercase tracking-wider">{t('wallet.locked')}</span>
                       </div>
-                      {agentsTotalBalance > 0 && (
-                        <button
-                          onClick={handleWithdrawAllFromAgents}
-                          className="text-xs px-2 py-1 rounded bg-luxury-amber/20 text-luxury-amber hover:bg-luxury-amber/30 transition-colors"
-                        >
-                          {t('wallet.withdraw')}
-                        </button>
-                      )}
                     </div>
                     <p className="text-2xl font-bold text-luxury-amber font-mono">{agentsTotalBalance.toLocaleString()}</p>
                     <p className="text-xs text-white/40 mt-1">≈ ${toUSDT(agentsTotalBalance)} USDT</p>
+                    {agentsTotalBalance > 0 && (
+                      <button
+                        onClick={handleWithdrawAllFromAgents}
+                        className="w-full mt-3 px-3 py-2 rounded-lg bg-luxury-amber/20 text-luxury-amber hover:bg-luxury-amber/30 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      >
+                        <ArrowDownRight className="w-4 h-4" />
+                        {t('wallet.withdrawAll') || '一键归集'}
+                      </button>
+                    )}
                   </div>
 
                   <div className="bg-void-light/50 rounded-xl p-4 border border-white/5">
@@ -1237,18 +1138,16 @@ const WalletPage: React.FC = () => {
                 </div>
               )}
             </div>
-          </>
-        )}
+          </div>
+        
+        {/* Modals */}
+        {showDepositModal && <DepositModal />}
+        {showSwapModal && <SwapModal />}
+        {showWithdrawModal && <WithdrawModal />}
+        {showNFTDetailModal && <NFTDetailModal />}
+        {showInviteDetailModal && <InviteDetailModal />}
+        {showTxDetailModal && <TxDetailModal />}
       </div>
-      
-      {/* Modals */}
-      {showDepositModal && <DepositModal />}
-      {showSwapModal && <SwapModal />}
-      {showWithdrawModal && <WithdrawModal />}
-      {showNFTDetailModal && <NFTDetailModal />}
-      {showInviteDetailModal && <InviteDetailModal />}
-      {showTxDetailModal && <TxDetailModal />}
-    </div>
   );
 };
 

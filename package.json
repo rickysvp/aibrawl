@@ -1,6 +1,6 @@
 {
   "name": "airena-web",
-  "version": "1.8.18",
+  "version": "1.8.26",
   "private": true,
   "type": "module",
   "scripts": {

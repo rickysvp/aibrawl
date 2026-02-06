@@ -155,13 +155,15 @@ const calculateAgentStats = (wins: number, losses: number, _kills: number, histo
 };
 
 // 生成随机 Agent
-export const generateRandomAgent = (isPlayer: boolean = false): Agent => {
+export const generateRandomAgent = (isPlayer: boolean = false, isNew: boolean = false): Agent => {
   const baseHp = 100 + Math.floor(Math.random() * 50);
-  const wins = Math.floor(Math.random() * 30);
-  const losses = Math.floor(Math.random() * 20);
-  const kills = Math.floor(Math.random() * 50);
+  
+  // 如果是新铸造的 Agent，初始数据为 0
+  const wins = isNew ? 0 : Math.floor(Math.random() * 30);
+  const losses = isNew ? 0 : Math.floor(Math.random() * 20);
+  const kills = isNew ? 0 : Math.floor(Math.random() * 50);
 
-  const battleHistory = generateBattleHistory(wins, losses);
+  const battleHistory = isNew ? [] : generateBattleHistory(wins, losses);
   const stats = calculateAgentStats(wins, losses, kills, battleHistory);
   const agentStats = generateStats();
 

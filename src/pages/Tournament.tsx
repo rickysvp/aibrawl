@@ -18,11 +18,7 @@ import {
   Settings,
   CheckCircle,
   AlertCircle,
-  Crown,
-  Sparkles,
-  Medal,
-  Swords,
-  ArrowRight
+  Crown
 } from 'lucide-react';
 
 const Tournament: React.FC = () => {
@@ -48,13 +44,11 @@ const Tournament: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'challenge' | 'daily' | 'weekly'>('all');
 
-  // 显示Toast
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 获取状态配置
   const getStatusConfig = (status: TournamentType['status']) => {
     switch (status) {
       case 'ongoing':
@@ -92,7 +86,6 @@ const Tournament: React.FC = () => {
     }
   };
 
-  // 获取类型配置
   const getTypeConfig = (type: TournamentType['type']) => {
     switch (type) {
       case 'challenge':
@@ -122,7 +115,6 @@ const Tournament: React.FC = () => {
     }
   };
 
-  // 格式化时间
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleString('zh-CN', {
@@ -133,7 +125,6 @@ const Tournament: React.FC = () => {
     });
   };
 
-  // 获取剩余时间
   const getTimeRemaining = (timestamp: number) => {
     const diff = timestamp - Date.now();
     if (diff <= 0) return t('tournament.started');
@@ -149,7 +140,6 @@ const Tournament: React.FC = () => {
     return `${minutes}m`;
   };
 
-  // 处理报名
   const handleRegister = () => {
     if (!selectedTournament || !selectedAgentId) return;
 
@@ -162,134 +152,52 @@ const Tournament: React.FC = () => {
     }
   };
 
-  // 打开报名弹窗
   const openRegistrationModal = (tournament: TournamentType) => {
     setSelectedTournament(tournament);
     setSelectedAgentId('');
     setShowRegistrationModal(true);
   };
 
-  // 打开对阵图弹窗
   const openBracketModal = (tournament: TournamentType) => {
     setSelectedTournament(tournament);
     setShowBracketModal(true);
   };
 
-  // 保存自动设置
   const saveAutoSettings = () => {
     showToast(t('tournament.autoSettingsSaved'), 'success');
     setShowAutoSettingsModal(false);
   };
 
-  // 过滤锦标赛
   const filteredTournaments = tournaments.filter((t) => {
     if (activeTab === 'all') return true;
     return t.type === activeTab;
   });
 
-  // 获取我的报名
   const getMyEntry = (tournamentId: string) => {
     return tournamentEntries.find(
       (e) => e.tournamentId === tournamentId && e.userId === wallet.address
     );
   };
 
-  // 检查是否已报名
   const isRegistered = (tournamentId: string) => {
     return !!getMyEntry(tournamentId);
   };
 
   if (!wallet.connected) {
     return (
-      <div className="min-h-screen bg-void pt-24 pb-24">
-        <div className="max-w-screen-xl mx-auto px-4">
-          {/* 页面标题 */}
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 mb-6"
-            >
-              <Sparkles className="w-4 h-4 text-luxury-gold" />
-              <span className="text-sm text-luxury-gold">{t('tournament.title')}</span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
-            >
-              {t('tournament.heroTitle') || '锦标赛'}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-white/50 text-lg max-w-2xl mx-auto"
-            >
-              {t('tournament.heroDesc') || '参加激烈锦标赛，争夺冠军荣耀'}
-            </motion.p>
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-gold/20 to-luxury-purple/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-6">
+            <Wallet className="w-10 h-10 text-luxury-gold" />
           </div>
-
-          {/* 特性展示 */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+          <h2 className="text-2xl font-bold text-white mb-2">{t('wallet.connectFirst')}</h2>
+          <p className="text-white/40 mb-8">{t('wallet.connectDesc') || 'Please connect your wallet to continue'}</p>
+          <button
+            onClick={() => connectWallet('wallet')}
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-luxury-gold to-luxury-purple text-white font-semibold hover:opacity-90 transition-opacity"
           >
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-gold/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-gold/20 to-luxury-amber/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Trophy className="w-7 h-7 text-luxury-gold" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('tournament.feature1') || '冠军奖励'}</h3>
-              <p className="text-white/40 text-sm">{t('tournament.feature1Desc') || '丰厚奖金池，冠军独享荣耀'}</p>
-            </div>
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-purple/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Swords className="w-7 h-7 text-luxury-purple" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('tournament.feature2') || '激烈对决'}</h3>
-              <p className="text-white/40 text-sm">{t('tournament.feature2Desc') || '多轮淘汰赛，强者晋级'}</p>
-            </div>
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-cyan/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-cyan/20 to-luxury-blue/20 border border-luxury-cyan/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Medal className="w-7 h-7 text-luxury-cyan" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('tournament.feature3') || '排名荣誉'}</h3>
-              <p className="text-white/40 text-sm">{t('tournament.feature3Desc') || '全球排名，展示实力'}</p>
-            </div>
-          </motion.div>
-
-          {/* 连接钱包卡片 */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="card-luxury rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-          >
-            {/* 背景装饰 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/5 via-transparent to-luxury-purple/5" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-luxury-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-            <div className="relative z-10">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-gold/20 to-luxury-purple/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-6">
-                <Wallet className="w-10 h-10 text-luxury-gold" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{t('wallet.connectFirst')}</h2>
-              <p className="text-white/40 mb-8 max-w-md mx-auto">{t('tournament.connectDesc') || '连接钱包报名参加锦标赛，争夺冠军'}</p>
-              <button
-                onClick={() => connectWallet('wallet')}
-                className="group relative px-8 py-4 rounded-xl overflow-hidden inline-flex items-center gap-2"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-luxury-gold via-luxury-amber to-luxury-purple" />
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                <span className="relative text-white font-semibold">{t('wallet.connectWallet')}</span>
-                <ArrowRight className="relative w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </motion.div>
+            {t('wallet.connectWallet')}
+          </button>
         </div>
       </div>
     );
@@ -298,36 +206,6 @@ const Tournament: React.FC = () => {
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
-        {/* 页面标题 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxury-gold/20 to-luxury-amber/20 border border-luxury-gold/30 flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-luxury-gold" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white font-display">{t('tournament.title')}</h1>
-                <p className="text-white/40">{t('tournament.subtitle')}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowHistoryModal(true)}
-                className="p-3 rounded-xl bg-void-light/50 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
-              >
-                <History className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setShowAutoSettingsModal(true)}
-                className="p-3 rounded-xl bg-void-light/50 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 统计卡片 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -398,30 +276,47 @@ const Tournament: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* 类型筛选 */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-          {[
-            { key: 'all', label: t('tournament.all'), icon: Trophy },
-            { key: 'challenge', label: t('tournament.challenge'), icon: Zap },
-            { key: 'daily', label: t('tournament.daily'), icon: Calendar },
-            { key: 'weekly', label: t('tournament.weekly'), icon: Crown },
-          ].map((tab) => (
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            {[
+              { key: 'all', label: t('tournament.all'), icon: Trophy },
+              { key: 'challenge', label: t('tournament.challenge'), icon: Zap },
+              { key: 'daily', label: t('tournament.daily'), icon: Calendar },
+              { key: 'weekly', label: t('tournament.weekly'), icon: Crown },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-luxury-purple/20 text-luxury-purple border border-luxury-purple/30'
+                    : 'bg-void-light/30 text-white/60 border border-white/5 hover:border-white/20'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.key
-                  ? 'bg-luxury-purple/20 text-luxury-purple border border-luxury-purple/30'
-                  : 'bg-void-light/30 text-white/60 border border-white/5 hover:border-white/20'
-              }`}
+              onClick={() => setShowHistoryModal(true)}
+              className="p-2 rounded-xl bg-void-light/50 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+              title={t('tournament.history')}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <History className="w-5 h-5" />
             </button>
-          ))}
+            <button
+              onClick={() => setShowAutoSettingsModal(true)}
+              className="p-2 rounded-xl bg-void-light/50 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+              title={t('tournament.autoSettings')}
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* 锦标赛列表 */}
         <div className="space-y-4">
           {filteredTournaments.map((tournament, index) => {
             const status = getStatusConfig(tournament.status);
@@ -439,7 +334,6 @@ const Tournament: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 className="card-luxury rounded-2xl overflow-hidden"
               >
-                {/* 头部 */}
                 <div className="px-6 py-4 border-b border-white/5">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
@@ -471,7 +365,6 @@ const Tournament: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 信息区 */}
                 <div className="px-6 py-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="p-3 bg-void-light/30 rounded-xl">
@@ -496,7 +389,6 @@ const Tournament: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 进度条 */}
                   {tournament.status !== 'finished' && (
                     <div className="mb-4">
                       <div className="h-2 bg-void-light rounded-full overflow-hidden">
@@ -512,7 +404,6 @@ const Tournament: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 操作按钮 */}
                   <div className="flex items-center gap-3">
                     {(tournament.status === 'upcoming' || tournament.status === 'registration') && (
                       <>
@@ -555,7 +446,6 @@ const Tournament: React.FC = () => {
                     )}
                   </div>
 
-                  {/* 我的报名信息 */}
                   {myEntry && (
                     <div className="mt-4 p-4 bg-luxury-purple/5 rounded-xl border border-luxury-purple/20">
                       <div className="flex items-center justify-between">
@@ -588,7 +478,6 @@ const Tournament: React.FC = () => {
           })}
         </div>
 
-        {/* 空状态 */}
         {filteredTournaments.length === 0 && (
           <div className="card-luxury rounded-2xl p-16 text-center">
             <div className="w-24 h-24 rounded-3xl bg-void-light/50 border border-white/5 flex items-center justify-center mx-auto mb-6">
@@ -599,7 +488,6 @@ const Tournament: React.FC = () => {
           </div>
         )}
 
-        {/* 报名弹窗 */}
         <AnimatePresence>
           {showRegistrationModal && selectedTournament && (
             <motion.div
@@ -627,7 +515,6 @@ const Tournament: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 资格要求 */}
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-white mb-2">{t('tournament.requirements')}</h4>
                   <ul className="space-y-2 text-sm text-white/60">
@@ -654,7 +541,6 @@ const Tournament: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* 选择Agent */}
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-white mb-2">{t('tournament.selectAgent')}</h4>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -707,7 +593,6 @@ const Tournament: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* 对阵图弹窗 */}
         <AnimatePresence>
           {showBracketModal && selectedTournament && (
             <motion.div
@@ -737,7 +622,6 @@ const Tournament: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* 自动设置弹窗 */}
         <AnimatePresence>
           {showAutoSettingsModal && (
             <motion.div
@@ -757,7 +641,6 @@ const Tournament: React.FC = () => {
                   {t('tournament.autoSettings')}
                 </h3>
 
-                {/* 总开关 */}
                 <div className="flex items-center justify-between p-4 bg-void-light/30 rounded-xl mb-4">
                   <div>
                     <p className="text-white font-medium">{t('tournament.enableAuto')}</p>
@@ -777,7 +660,6 @@ const Tournament: React.FC = () => {
                   </button>
                 </div>
 
-                {/* 挑战赛设置 */}
                 <div className="space-y-4 mb-4">
                   <div className="p-4 bg-void-light/20 rounded-xl">
                     <div className="flex items-center justify-between mb-3">
@@ -808,7 +690,6 @@ const Tournament: React.FC = () => {
                     <p className="text-xs text-white/40">{t('tournament.challengeAutoDesc')}</p>
                   </div>
 
-                  {/* 日联赛设置 */}
                   <div className="p-4 bg-void-light/20 rounded-xl">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -838,7 +719,6 @@ const Tournament: React.FC = () => {
                     <p className="text-xs text-white/40">{t('tournament.dailyAutoDesc')}</p>
                   </div>
 
-                  {/* 周联赛设置 */}
                   <div className="p-4 bg-void-light/20 rounded-xl">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -888,7 +768,6 @@ const Tournament: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* 历史记录弹窗 */}
         <AnimatePresence>
           {showHistoryModal && (
             <motion.div
@@ -970,7 +849,6 @@ const Tournament: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Toast */}
         <AnimatePresence>
           {toast && (
             <motion.div

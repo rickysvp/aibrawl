@@ -17,13 +17,13 @@ import {
   TrendingUp,
   Wallet,
   Info,
-  ArrowDownRight,
-  ArrowUpRight
+  LogOut
 } from 'lucide-react';
 
 interface AgentCardProps {
   agent: Agent;
   compact?: boolean;
+  viewMode?: 'card' | 'list';
 }
 
 // 稀有度配置
@@ -65,31 +65,10 @@ const rarityConfig: Record<Rarity, { name: string; color: string; bgColor: strin
   },
 };
 
-const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false }) => {
+const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode = 'card' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const { allocateFunds, withdrawFunds, wallet } = useGameStore();
-  const [showDepositInput, setShowDepositInput] = useState(false);
-  const [showWithdrawInput, setShowWithdrawInput] = useState(false);
-  const [amount, setAmount] = useState('');
-
-  const handleDeposit = () => {
-    const value = parseFloat(amount);
-    if (value > 0 && wallet.balance >= value) {
-      allocateFunds(agent.id, value);
-      setAmount('');
-      setShowDepositInput(false);
-    }
-  };
-
-  const handleWithdraw = () => {
-    const value = parseFloat(amount);
-    if (value > 0 && agent.balance >= value) {
-      withdrawFunds(agent.id, value);
-      setAmount('');
-      setShowWithdrawInput(false);
-    }
-  };
+  const { joinArena, leaveArena } = useGameStore();
   
   const getStatusConfig = () => {
     switch (agent.status) {
@@ -198,6 +177,146 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false }) => {
                 <Info className="w-4 h-4" />
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* 详情弹窗 */}
+        <AgentDetailModal 
+          agent={agent} 
+          isOpen={isDetailOpen} 
+          onClose={() => setIsDetailOpen(false)} 
+        />
+      </>
+    );
+  }
+
+  // 列表视图
+  if (viewMode === 'list') {
+    return (
+      <>
+        <div 
+          className="flex items-center gap-4 p-3 bg-void-light/30 rounded-xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+          onClick={() => setIsDetailOpen(true)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Agent 头像 */}
+          <div className="relative flex-shrink-0">
+            <div 
+              className="absolute inset-0 blur-lg rounded-full transition-opacity duration-300"
+              style={{ 
+                backgroundColor: rarity.color,
+                opacity: isHovered ? 0.5 : 0.3 
+              }}
+            />
+            <div 
+              className="relative w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ 
+                background: `linear-gradient(135deg, ${rarity.color}20, ${rarity.color}40)`,
+                border: `2px solid ${rarity.color}`
+              }}
+            >
+              <PixelAgent agent={agent} size={36} />
+            </div>
+            {/* 稀有度指示器 */}
+            <div 
+              className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: rarity.color }}
+            >
+              <RarityIcon className="w-2.5 h-2.5 text-white" />
+            </div>
+          </div>
+          
+          {/* 名称和稀有度 */}
+          <div className="w-32 flex-shrink-0">
+            <h4 className="text-sm font-semibold text-white truncate">{agent.name}</h4>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs text-white/40">#{agent.nftId}</span>
+              <span 
+                className="text-xs font-medium"
+                style={{ color: rarity.color }}
+              >
+                {rarity.name}
+              </span>
+            </div>
+          </div>
+
+          {/* 状态 */}
+          <div className="w-20 flex-shrink-0">
+            <span className={`text-xs px-2 py-1 rounded-full ${status.bgColor} ${status.color}`}>
+              {status.label}
+            </span>
+          </div>
+
+          {/* 余额 */}
+          <div className="w-24 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5 text-luxury-gold" />
+              <span className="text-sm font-mono text-white">{agent.balance.toFixed(0)}</span>
+            </div>
+          </div>
+
+          {/* 盈亏 */}
+          <div className="w-24 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className={`w-3.5 h-3.5 ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`} />
+              <span className={`text-sm font-mono ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
+                {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* 场次 */}
+          <div className="w-20 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
+              <Swords className="w-3.5 h-3.5 text-luxury-cyan" />
+              <span className="text-sm font-mono text-white">{agent.totalBattles}</span>
+            </div>
+          </div>
+
+          {/* 胜率 */}
+          <div className="w-20 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
+              <Target className={`w-3.5 h-3.5 ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`} />
+              <span className={`text-sm font-mono ${agent.winRate >= 60 ? 'text-luxury-green' : agent.winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}`}>
+                {agent.winRate}%
+              </span>
+            </div>
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="flex-1 flex items-center justify-end gap-2">
+            {agent.status === 'idle' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); joinArena(agent.id); }}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-gold/10 text-luxury-gold rounded-lg hover:bg-luxury-gold/20 transition-colors"
+                title="加入竞技场"
+              >
+                <Swords className="w-3.5 h-3.5" />
+                <span>加入</span>
+              </button>
+            )}
+            {agent.status === 'in_arena' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); leaveArena(agent.id); }}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-rose/10 text-luxury-rose rounded-lg hover:bg-luxury-rose/20 transition-colors"
+                title="退出竞技场"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>退出</span>
+              </button>
+            )}
+            {agent.status === 'fighting' && (
+              <span className="text-xs text-white/30 px-3 py-1.5">战斗中</span>
+            )}
+            {agent.status === 'dead' && (
+              <span className="text-xs text-white/30 px-3 py-1.5">阵亡</span>
+            )}
+          </div>
+
+          {/* 详情图标 */}
+          <div className="text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
+            <Info className="w-4 h-4" />
           </div>
         </div>
 
@@ -341,79 +460,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false }) => {
           </div>
         </div>
       </div>
-
-      {/* 快速存取款按钮 - 卡片下方 */}
-      {agent.status === 'idle' && (
-        <div className="mt-2 flex items-center justify-center gap-2">
-          {showDepositInput ? (
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="金额"
-                className="w-20 px-2 py-1 text-xs bg-void-light border border-white/10 rounded text-white"
-                autoFocus
-              />
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDeposit(); }}
-                className="px-2 py-1 text-xs bg-luxury-green/20 text-luxury-green rounded hover:bg-luxury-green/30"
-              >
-                确认
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDepositInput(false); setAmount(''); }}
-                className="px-2 py-1 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
-              >
-                取消
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowDepositInput(true); }}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-green/10 text-luxury-green rounded-lg hover:bg-luxury-green/20 transition-colors"
-              title="存款"
-            >
-              <ArrowDownRight className="w-3.5 h-3.5" />
-              <span>存款</span>
-            </button>
-          )}
-
-          {showWithdrawInput ? (
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="金额"
-                className="w-20 px-2 py-1 text-xs bg-void-light border border-white/10 rounded text-white"
-                autoFocus
-              />
-              <button
-                onClick={(e) => { e.stopPropagation(); handleWithdraw(); }}
-                className="px-2 py-1 text-xs bg-luxury-amber/20 text-luxury-amber rounded hover:bg-luxury-amber/30"
-              >
-                确认
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(false); setAmount(''); }}
-                className="px-2 py-1 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
-              >
-                取消
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(true); }}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-amber/10 text-luxury-amber rounded-lg hover:bg-luxury-amber/20 transition-colors"
-              title="提款"
-            >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>提款</span>
-            </button>
-          )}
-        </div>
-      )}
 
       {/* 详情弹窗 */}
       <AgentDetailModal 

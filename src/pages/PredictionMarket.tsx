@@ -10,12 +10,7 @@ import {
   Wallet,
   CheckCircle,
   AlertCircle,
-  Settings,
-  Sparkles,
-  Zap,
-  BarChart3,
-  Brain,
-  ArrowRight
+  Settings
 } from 'lucide-react';
 import type { PredictionMarket, AutoBetRule } from '../types';
 
@@ -38,7 +33,6 @@ const PredictionMarketPage: React.FC = () => {
   const [showBetModal, setShowBetModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // 自动下注设置
   const [autoBetSettings, setAutoBetSettings] = useState<AutoBetRule>({
     enabled: false,
     betAmount: 100,
@@ -48,13 +42,11 @@ const PredictionMarketPage: React.FC = () => {
     maxOdds: 5.0
   });
 
-  // 显示Toast
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 处理下注
   const handlePlaceBet = () => {
     if (!selectedMarket || !selectedAgent || !betAmount) return;
 
@@ -74,7 +66,6 @@ const PredictionMarketPage: React.FC = () => {
     }
   };
 
-  // 打开下注弹窗
   const openBetModal = (market: PredictionMarket, agentId: string) => {
     setSelectedMarket(market);
     setSelectedAgent(agentId);
@@ -82,13 +73,11 @@ const PredictionMarketPage: React.FC = () => {
     setShowBetModal(true);
   };
 
-  // 保存自动下注设置
   const saveAutoBetSettings = () => {
     setAutoBetRule(autoBetSettings);
     showToast(t('prediction.autoBetSaved'), 'success');
   };
 
-  // 获取市场状态文本
   const getStatusText = (status: string) => {
     switch (status) {
       case 'open': return t('prediction.open');
@@ -98,7 +87,6 @@ const PredictionMarketPage: React.FC = () => {
     }
   };
 
-  // 获取预测类型文本
   const getBetTypeText = (type: string) => {
     switch (type) {
       case 'final': return t('prediction.final');
@@ -108,103 +96,24 @@ const PredictionMarketPage: React.FC = () => {
     }
   };
 
-  // 过滤开放的市场
   const openMarkets = predictionMarkets.filter(m => m.status === 'open');
-
-  // 我的预测
   const myBets = userPredictions.filter(b => b.userId === wallet.address);
 
   if (!wallet.connected) {
     return (
-      <div className="min-h-screen bg-void pt-24 pb-24">
-        <div className="max-w-screen-xl mx-auto px-4">
-          {/* 页面标题 */}
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-luxury-purple/10 border border-luxury-purple/20 mb-6"
-            >
-              <Sparkles className="w-4 h-4 text-luxury-purple" />
-              <span className="text-sm text-luxury-purple">{t('prediction.title')}</span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl md:text-5xl font-bold text-white mb-4"
-            >
-              {t('prediction.heroTitle') || '预测市场'}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-white/50 text-lg max-w-2xl mx-auto"
-            >
-              {t('prediction.heroDesc') || '用智慧预测战斗结果，赢取丰厚奖励'}
-            </motion.p>
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center mx-auto mb-6">
+            <Wallet className="w-10 h-10 text-luxury-purple" />
           </div>
-
-          {/* 特性展示 */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+          <h2 className="text-2xl font-bold text-white mb-2">{t('wallet.connectFirst')}</h2>
+          <p className="text-white/40 mb-8">{t('wallet.connectDesc') || 'Please connect your wallet to continue'}</p>
+          <button
+            onClick={() => connectWallet('wallet')}
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-luxury-purple to-luxury-cyan text-white font-semibold hover:opacity-90 transition-opacity"
           >
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-purple/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Brain className="w-7 h-7 text-luxury-purple" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('prediction.feature1') || '智能预测'}</h3>
-              <p className="text-white/40 text-sm">{t('prediction.feature1Desc') || '分析战斗数据，做出明智预测'}</p>
-            </div>
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-gold/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-gold/20 to-luxury-amber/20 border border-luxury-gold/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <BarChart3 className="w-7 h-7 text-luxury-gold" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('prediction.feature2') || '实时赔率'}</h3>
-              <p className="text-white/40 text-sm">{t('prediction.feature2Desc') || '动态赔率系统，公平透明'}</p>
-            </div>
-            <div className="card-luxury rounded-2xl p-6 text-center group hover:border-luxury-green/30 transition-colors">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-luxury-green/20 to-luxury-cyan/20 border border-luxury-green/30 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Zap className="w-7 h-7 text-luxury-green" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">{t('prediction.feature3') || '即时结算'}</h3>
-              <p className="text-white/40 text-sm">{t('prediction.feature3Desc') || '战斗结束立即结算奖励'}</p>
-            </div>
-          </motion.div>
-
-          {/* 连接钱包卡片 */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="card-luxury rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-          >
-            {/* 背景装饰 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-luxury-purple/5 via-transparent to-luxury-cyan/5" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-luxury-purple/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-luxury-cyan/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-            <div className="relative z-10">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-luxury-purple/20 to-luxury-cyan/20 border border-luxury-purple/30 flex items-center justify-center mx-auto mb-6">
-                <Wallet className="w-10 h-10 text-luxury-purple" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">{t('wallet.connectFirst')}</h2>
-              <p className="text-white/40 mb-8 max-w-md mx-auto">{t('prediction.connectDesc') || '连接钱包开始预测，赢取丰厚奖励'}</p>
-              <button
-                onClick={() => connectWallet('wallet')}
-                className="group relative px-8 py-4 rounded-xl overflow-hidden inline-flex items-center gap-2"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-luxury-purple via-luxury-purple-light to-luxury-cyan" />
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-                <span className="relative text-white font-semibold">{t('wallet.connectWallet')}</span>
-                <ArrowRight className="relative w-5 h-5 text-white group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </motion.div>
+            {t('wallet.connectWallet')}
+          </button>
         </div>
       </div>
     );
@@ -213,20 +122,8 @@ const PredictionMarketPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
-        {/* 页面标题 */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxury-rose/20 to-luxury-purple/20 border border-luxury-rose/30 flex items-center justify-center">
-              <Target className="w-6 h-6 text-luxury-rose" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white font-display">{t('prediction.title')}</h1>
-              <p className="text-white/40">{t('prediction.subtitle')}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* 统计卡片 */}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -295,7 +192,6 @@ const PredictionMarketPage: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Tab切换 */}
         <div className="flex items-center gap-1 relative bg-void-light/20 rounded-xl p-1 w-fit mb-6 isolate">
           <motion.div
             className="absolute inset-y-1 rounded-lg bg-luxury-rose/20 -z-10"
@@ -319,7 +215,6 @@ const PredictionMarketPage: React.FC = () => {
           ))}
         </div>
 
-        {/* 市场列表 */}
         {activeTab === 'markets' && (
           <div className="space-y-4">
             {openMarkets.length === 0 ? (
@@ -350,7 +245,6 @@ const PredictionMarketPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 参与者列表 */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {systemAgents.slice(0, 8).map((agent) => {
                       const odds = market.odds[agent.id] || 2.0;
@@ -386,7 +280,6 @@ const PredictionMarketPage: React.FC = () => {
           </div>
         )}
 
-        {/* 我的预测 */}
         {activeTab === 'myBets' && (
           <div className="space-y-3">
             {myBets.length === 0 ? (
@@ -442,7 +335,6 @@ const PredictionMarketPage: React.FC = () => {
           </div>
         )}
 
-        {/* 自动下注设置 */}
         {activeTab === 'auto' && (
           <div className="card-luxury rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -451,7 +343,6 @@ const PredictionMarketPage: React.FC = () => {
             </h3>
 
             <div className="space-y-6">
-              {/* 启用开关 */}
               <div className="flex items-center justify-between p-4 bg-void-light/30 rounded-xl">
                 <div>
                   <p className="text-white font-medium">{t('prediction.enableAutoBet')}</p>
@@ -471,7 +362,6 @@ const PredictionMarketPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* 下注金额 */}
               <div>
                 <label className="text-sm text-white/60 mb-2 block">{t('prediction.betAmount')}</label>
                 <div className="relative">
@@ -485,7 +375,6 @@ const PredictionMarketPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 策略选择 */}
               <div>
                 <label className="text-sm text-white/60 mb-2 block">{t('prediction.strategy')}</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -505,7 +394,6 @@ const PredictionMarketPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 每日最大次数 */}
               <div>
                 <label className="text-sm text-white/60 mb-2 block">{t('prediction.maxBetsPerDay')}</label>
                 <input
@@ -518,7 +406,6 @@ const PredictionMarketPage: React.FC = () => {
                 />
               </div>
 
-              {/* 赔率范围 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-white/60 mb-2 block">{t('prediction.minOdds')}</label>
@@ -554,7 +441,6 @@ const PredictionMarketPage: React.FC = () => {
           </div>
         )}
 
-        {/* 下注弹窗 */}
         <AnimatePresence>
           {showBetModal && selectedMarket && (
             <motion.div
@@ -631,7 +517,6 @@ const PredictionMarketPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Toast */}
         <AnimatePresence>
           {toast && (
             <motion.div
