@@ -287,78 +287,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false }) => {
                 </div>
               </div>
 
-              {/* 快速存取款按钮 */}
-              {agent.status === 'idle' && (
-                <div className="flex items-center gap-2 mt-2">
-                  {showDepositInput ? (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="金额"
-                        className="w-16 px-1.5 py-0.5 text-xs bg-void-light border border-white/10 rounded text-white"
-                        autoFocus
-                      />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeposit(); }}
-                        className="px-2 py-0.5 text-xs bg-luxury-green/20 text-luxury-green rounded hover:bg-luxury-green/30"
-                      >
-                        确认
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowDepositInput(false); setAmount(''); }}
-                        className="px-2 py-0.5 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
-                      >
-                        取消
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowDepositInput(true); }}
-                      className="flex items-center gap-0.5 px-2 py-0.5 text-xs bg-luxury-green/10 text-luxury-green rounded hover:bg-luxury-green/20"
-                      title="存款"
-                    >
-                      <ArrowDownRight className="w-3 h-3" />
-                      <span>存款</span>
-                    </button>
-                  )}
-
-                  {showWithdrawInput ? (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="金额"
-                        className="w-16 px-1.5 py-0.5 text-xs bg-void-light border border-white/10 rounded text-white"
-                        autoFocus
-                      />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleWithdraw(); }}
-                        className="px-2 py-0.5 text-xs bg-luxury-amber/20 text-luxury-amber rounded hover:bg-luxury-amber/30"
-                      >
-                        确认
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(false); setAmount(''); }}
-                        className="px-2 py-0.5 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
-                      >
-                        取消
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(true); }}
-                      className="flex items-center gap-0.5 px-2 py-0.5 text-xs bg-luxury-amber/10 text-luxury-amber rounded hover:bg-luxury-amber/20"
-                      title="提款"
-                    >
-                      <ArrowUpRight className="w-3 h-3" />
-                      <span>提款</span>
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
@@ -413,6 +341,79 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false }) => {
           </div>
         </div>
       </div>
+
+      {/* 快速存取款按钮 - 卡片下方 */}
+      {agent.status === 'idle' && (
+        <div className="mt-2 flex items-center justify-center gap-2">
+          {showDepositInput ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="金额"
+                className="w-20 px-2 py-1 text-xs bg-void-light border border-white/10 rounded text-white"
+                autoFocus
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDeposit(); }}
+                className="px-2 py-1 text-xs bg-luxury-green/20 text-luxury-green rounded hover:bg-luxury-green/30"
+              >
+                确认
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowDepositInput(false); setAmount(''); }}
+                className="px-2 py-1 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
+              >
+                取消
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDepositInput(true); }}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-green/10 text-luxury-green rounded-lg hover:bg-luxury-green/20 transition-colors"
+              title="存款"
+            >
+              <ArrowDownRight className="w-3.5 h-3.5" />
+              <span>存款</span>
+            </button>
+          )}
+
+          {showWithdrawInput ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="金额"
+                className="w-20 px-2 py-1 text-xs bg-void-light border border-white/10 rounded text-white"
+                autoFocus
+              />
+              <button
+                onClick={(e) => { e.stopPropagation(); handleWithdraw(); }}
+                className="px-2 py-1 text-xs bg-luxury-amber/20 text-luxury-amber rounded hover:bg-luxury-amber/30"
+              >
+                确认
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(false); setAmount(''); }}
+                className="px-2 py-1 text-xs bg-white/10 text-white/60 rounded hover:bg-white/20"
+              >
+                取消
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowWithdrawInput(true); }}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs bg-luxury-amber/10 text-luxury-amber rounded-lg hover:bg-luxury-amber/20 transition-colors"
+              title="提款"
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>提款</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 详情弹窗 */}
       <AgentDetailModal 
