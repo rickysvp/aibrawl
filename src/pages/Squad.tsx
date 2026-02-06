@@ -209,13 +209,17 @@ const Squad: React.FC = () => {
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
-        {/* 页面标题 - 与BATTLE标题高度一致 */}
-        <div className="card-luxury rounded-2xl overflow-hidden mb-6">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-luxury-cyan" />
-              <h2 className="text-base font-semibold text-white">{t('squad.title')}</h2>
-              <span className="text-xs text-white/40">{t('squad.subtitle')}</span>
+        {/* 页面标题 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxury-cyan/20 to-luxury-purple/20 border border-luxury-cyan/30 flex items-center justify-center">
+                <Users className="w-6 h-6 text-luxury-cyan" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white font-display">{t('squad.title')}</h1>
+                <p className="text-white/40 text-lg">{t('squad.subtitle')}</p>
+              </div>
             </div>
 
             {/* 批量操作入口 - 右上角 */}
