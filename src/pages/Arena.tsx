@@ -93,6 +93,9 @@ const Arena: React.FC = () => {
   const [logTab, setLogTab] = useState<'arena' | 'my'>('arena');
   const [showSettlement, setShowSettlement] = useState(false);
 
+  // 当前战斗轮次显示（战斗开始时固定，战斗结束后更新）
+  const [displayBattleRound, setDisplayBattleRound] = useState(1);
+
   // 排序状态
   const [sortBy, setSortBy] = useState<'balance' | 'winRate' | 'profit'>('balance');
 
@@ -182,6 +185,10 @@ const Arena: React.FC = () => {
         startNewRound();
         incrementRound();
         incrementSystemRound(); // 增加系统全局轮次计数
+        
+        // 获取当前系统总轮次并固定为本次战斗的轮次
+        const currentSystemRound = useGameStore.getState().getTotalSystemRounds();
+        setDisplayBattleRound(currentSystemRound);
         
         // 获取当前最新的 agents 状态
         const currentState = useGameStore.getState();
@@ -371,24 +378,6 @@ const Arena: React.FC = () => {
   const currentCountdown = timerStateRef.current.countdown;
   const currentSelectedSlots = timerStateRef.current.selectedSlots;
 
-  // 使用系统全局轮次计数 - 动态计算
-  const [displaySystemRounds, setDisplaySystemRounds] = useState(1);
-
-  useEffect(() => {
-    const updateRounds = () => {
-      const store = useGameStore.getState();
-      const now = Date.now();
-      const elapsed = now - store.lastSystemRoundUpdate;
-      // 每1000ms增加1轮，从1开始
-      const additionalRounds = Math.floor(elapsed / 1000);
-      setDisplaySystemRounds(store.totalSystemRounds + additionalRounds);
-    };
-
-    updateRounds();
-    const interval = setInterval(updateRounds, 200);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
@@ -404,7 +393,7 @@ const Arena: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-semibold text-white">BATTLE</h2>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 font-mono">
-                    {t('arena.round')} {displaySystemRounds.toLocaleString()}
+                    {t('arena.round')} {displayBattleRound.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-green/10 border border-luxury-green/20">
@@ -431,7 +420,7 @@ const Arena: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-luxury-gold" />
                             <div>
-                              <h3 className="text-sm font-bold text-luxury-gold font-display">{t('arena.round')} {displaySystemRounds.toLocaleString()}</h3>
+                              <h3 className="text-sm font-bold text-luxury-gold font-display">{t('arena.round')} {displayBattleRound.toLocaleString()}</h3>
                               <p className="text-[10px] text-white/40">{t('leaderboard.top3')}</p>
                             </div>
                           </div>
