@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,11 +15,13 @@ import {
   Lock,
   Unlock,
   RefreshCw,
-  Info
+  Info,
+  ArrowLeft
 } from 'lucide-react';
 
 const LiquidityMining: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const {
     wallet,
     liquidityPool,
@@ -132,6 +135,12 @@ const LiquidityMining: React.FC = () => {
         {/* 页面标题 */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
+            <button
+              onClick={() => navigate('/wallet')}
+              className="w-12 h-12 rounded-2xl bg-void-light/50 border border-white/10 flex items-center justify-center hover:bg-void-light hover:border-white/20 transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6 text-white/60" />
+            </button>
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxury-gold/20 to-luxury-amber/20 border border-luxury-gold/30 flex items-center justify-center">
               <Coins className="w-6 h-6 text-luxury-gold" />
             </div>

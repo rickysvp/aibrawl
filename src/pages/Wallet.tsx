@@ -65,7 +65,7 @@ const MON_PRICE_CHANGE_24H = 5.23;
 const WalletPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { wallet, myAgents, connectWallet, withdrawFunds } = useGameStore();
+  const { wallet, myAgents, connectWallet, withdrawFunds, userStakes, calculateRewards } = useGameStore();
   
   // 弹窗状态
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -202,7 +202,11 @@ const WalletPage: React.FC = () => {
 
   const totalAssets = wallet.balance + wallet.lockedBalance;
   const agentsTotalBalance = myAgents.reduce((sum, a) => sum + a.balance, 0);
-  
+
+  // 计算流动性挖矿数据
+  const totalStaked = userStakes.reduce((sum, s) => sum + s.amount, 0);
+  const totalPendingRewards = userStakes.reduce((sum, s) => sum + calculateRewards(s), 0);
+
   // 换算USDT
   const toUSDT = (monAmount: number) => (monAmount * MON_TO_USDT_RATE).toFixed(2);
   
@@ -930,16 +934,21 @@ const WalletPage: React.FC = () => {
                     <p className="text-xs text-white/40 mt-1">≈ ${toUSDT(agentsTotalBalance)} USDT</p>
                   </div>
 
-                  <div
-                    onClick={() => navigate('/mining')}
-                    className="bg-void-light/50 rounded-xl p-4 border border-white/5 cursor-pointer hover:border-luxury-purple/30 hover:bg-void-light/70 transition-all group"
-                  >
-                    <div className="flex items-center gap-2 text-white/40 mb-2">
-                      <Pickaxe className="w-4 h-4 text-luxury-purple group-hover:text-luxury-purple-light transition-colors" />
-                      <span className="text-xs uppercase tracking-wider">{t('wallet.liquidityMining')}</span>
+                  <div className="bg-void-light/50 rounded-xl p-4 border border-white/5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 text-white/40">
+                        <Pickaxe className="w-4 h-4 text-luxury-purple" />
+                        <span className="text-xs uppercase tracking-wider">{t('wallet.stakedLiquidity')}</span>
+                      </div>
+                      <button
+                        onClick={() => navigate('/mining')}
+                        className="p-1.5 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
-                    <p className="text-2xl font-bold text-luxury-purple font-mono">{t('wallet.clickToEnter')}</p>
-                    <p className="text-xs text-white/40 mt-1">{t('wallet.highYield')}</p>
+                    <p className="text-2xl font-bold text-luxury-purple font-mono">{totalStaked.toLocaleString()}</p>
+                    <p className="text-xs text-luxury-gold mt-1">+{totalPendingRewards.toFixed(2)} {t('wallet.pendingRewards')}</p>
                   </div>
                 </div>
               </div>
