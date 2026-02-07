@@ -453,8 +453,8 @@ const Arena: React.FC = () => {
                 
                 {/* 结算弹窗 */}
                 {showSettlement && arena.top3.length > 0 && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-void/70 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-void-panel/90 rounded-2xl overflow-hidden border border-white/10 max-w-[320px] w-[85%] animate-scale-in shadow-2xl">
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-void/80 backdrop-blur-md animate-fade-in">
+                    <div className="bg-void-panel/95 rounded-2xl overflow-hidden border border-white/10 max-w-[320px] w-[85%] animate-scale-in shadow-2xl">
                       {/* 头部 - 简洁显示轮次 */}
                       <div className="px-4 py-2.5 bg-gradient-to-r from-luxury-gold/10 to-luxury-amber/5 border-b border-white/5 flex items-center justify-between">
                         <span className="text-xs font-medium text-white/60">Round {displayBattleRound.toLocaleString()}</span>
