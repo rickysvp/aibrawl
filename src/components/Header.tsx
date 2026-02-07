@@ -121,7 +121,7 @@ const Header: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center justify-center glass rounded-xl w-10 h-10 border border-white/10 hover:border-white/20 transition-colors"
+              className="flex items-center justify-center glass rounded-xl w-11 h-11 border border-white/10 hover:border-white/20 active:bg-white/10 transition-colors"
             >
               <Globe className="w-5 h-5 text-white/60" />
             </button>

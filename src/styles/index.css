@@ -437,6 +437,29 @@ input[type="number"]::-webkit-inner-spin-button {
     0 0 40px rgba(255, 215, 0, 0.2);
 }
 
+/* 移动端触摸优化 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 输入框在iOS上的样式修复 */
+input, textarea, select {
+  -webkit-appearance: none;
+  font-size: 16px; /* 防止iOS缩放 */
+}
+
+/* 滚动优化 */
+.scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* 禁用文本选择（对于交互元素） */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
   .font-pixel {
@@ -444,6 +467,42 @@ input[type="number"]::-webkit-inner-spin-button {
   }
   
   .card-luxury:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* 移动端按钮触摸反馈 */
+  .btn-luxury:active {
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 
+      0 0 20px rgba(139, 92, 246, 0.4),
+      0 0 40px rgba(139, 92, 246, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .btn-gold:active {
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.4),
+      0 0 40px rgba(255, 215, 0, 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+/* 桌面端hover效果 */
+@media (hover: hover) {
+  .btn-luxury:hover {
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 
+      0 0 20px rgba(139, 92, 246, 0.4),
+      0 0 40px rgba(139, 92, 246, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  .btn-gold:hover {
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.4),
+      0 0 40px rgba(255, 215, 0, 0.2);
     transform: translateY(-2px);
   }
 }

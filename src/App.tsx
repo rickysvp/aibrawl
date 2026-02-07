@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
@@ -13,10 +13,23 @@ import NotificationContainer from './components/NotificationContainer';
 import { useGameStore } from './store/gameStore';
 
 const App: React.FC = () => {
-  // 启动锦标赛定时器
+  const initialized = useRef(false);
+
+  // 启动锦标赛定时器和自动战斗系统
   useEffect(() => {
-    const { startTournamentScheduler } = useGameStore.getState();
+    // 防止 StrictMode 导致的重复初始化
+    if (initialized.current) return;
+    initialized.current = true;
+
+    const { startTournamentScheduler, startAutoBattleSystem, initializeArena } = useGameStore.getState();
+    initializeArena(); // 初始化1000个系统agents
     startTournamentScheduler();
+    startAutoBattleSystem(); // 启动后台自动战斗系统
+
+    return () => {
+      const { stopAutoBattleSystem } = useGameStore.getState();
+      stopAutoBattleSystem();
+    };
   }, []);
 
   return (

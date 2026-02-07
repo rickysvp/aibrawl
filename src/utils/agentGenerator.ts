@@ -1,8 +1,9 @@
 import { Agent, BattleRecord, Rarity } from '../types';
 
-// 随机名称生成
-const prefixes = ['超级', '闪电', '暗影', '烈焰', '冰霜', '雷霆', '狂暴', '幻影', '钢铁', '黄金'];
-const suffixes = ['战士', '猎手', '刺客', '法师', '守卫', '勇者', '骑士', '忍者', '枪手', '斗士'];
+// 英文代号前缀
+const codePrefixes = ['CYBER', 'NEON', 'QUANTUM', 'PHANTOM', 'STEEL', 'SHADOW', 'FLAME', 'FROST', 'STORM', 'VIPER', 'RAPTOR', 'TITAN', 'NOVA', 'SOLAR', 'LUNAR', 'COSMIC', 'VOID', 'AETHER', 'ZENITH', 'NEXUS'];
+// 英文代号后缀
+const codeSuffixes = ['X', 'Z', 'V', 'S', 'R', 'K', 'N', 'M', 'P', 'T', '7', '9', '01', '02', '03', 'X1', 'Z9', 'V2', 'A1', 'ZERO'];
 
 // Agent 颜色
 const agentColors = [
@@ -38,11 +39,19 @@ const generateNftId = () => {
   return nftIdCounter++;
 };
 
-// 生成随机名称
-const generateName = () => {
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  return `${prefix}${suffix}`;
+// NFT图片列表（从public/nfts目录）
+const nftImages = Array.from({ length: 52 }, (_, i) => `/nfts/nft${i + 1}.png`);
+
+// 生成随机NFT图片
+const generateNftImage = () => {
+  return nftImages[Math.floor(Math.random() * nftImages.length)];
+};
+
+// 生成英文代号名称
+const generateName = (nftId: number) => {
+  const prefix = codePrefixes[Math.floor(Math.random() * codePrefixes.length)];
+  const suffix = codeSuffixes[Math.floor(Math.random() * codeSuffixes.length)];
+  return `${prefix}-${suffix}`;
 };
 
 // 生成属性点 (11-99, 总和<333)
@@ -166,12 +175,14 @@ export const generateRandomAgent = (isPlayer: boolean = false, isNew: boolean = 
   const battleHistory = isNew ? [] : generateBattleHistory(wins, losses);
   const stats = calculateAgentStats(wins, losses, kills, battleHistory);
   const agentStats = generateStats();
+  const nftId = generateNftId();
 
   return {
     id: generateId(),
-    name: generateName(),
-    nftId: generateNftId(),
+    name: generateName(nftId),
+    nftId: nftId,
     color: agentColors[Math.floor(Math.random() * agentColors.length)],
+    image: generateNftImage(),
     // 基础属性
     ...agentStats,
     // 战斗属性
@@ -264,6 +275,7 @@ export const generateTournamentAgents = (count: number, startIndex: number = 0):
       name: `${prefix}${suffix}#${index + 1}`,
       nftId: index + 1,
       color: agentColors[index % agentColors.length],
+      image: generateNftImage(),
       hp: 100 + Math.floor(Math.random() * 100),
       maxHp: 150 + Math.floor(Math.random() * 100),
       attack,

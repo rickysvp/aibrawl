@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Agent } from '../types';
-import AgentCard from './AgentCard';
-import { Sparkles } from 'lucide-react';
+import NFTCard from './NFTCard';
+import NFTCardMobile from './NFTCardMobile';
+import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface MintingModalProps {
@@ -15,18 +16,37 @@ interface MintingModalProps {
 const MintingModal: React.FC<MintingModalProps> = ({ isOpen, isMinting, mintedAgents, onClose }) => {
   const { t } = useTranslation();
   const [showReveal, setShowReveal] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (!isMinting && mintedAgents.length > 0) {
-      // 铸造完成，延迟一点显示结果，让铸造动画跑完
       const timer = setTimeout(() => {
         setShowReveal(true);
+        setCurrentIndex(0);
       }, 500);
       return () => clearTimeout(timer);
     } else if (isMinting) {
       setShowReveal(false);
     }
   }, [isMinting, mintedAgents]);
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : mintedAgents.length - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev < mintedAgents.length - 1 ? prev + 1 : 0));
+  };
 
   if (!isOpen) return null;
 
@@ -36,7 +56,7 @@ const MintingModal: React.FC<MintingModalProps> = ({ isOpen, isMinting, mintedAg
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-void/90 backdrop-blur-xl"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-void/95 backdrop-blur-xl"
       >
         {/* 铸造中动画 */}
         {!showReveal && (
@@ -86,61 +106,100 @@ const MintingModal: React.FC<MintingModalProps> = ({ isOpen, isMinting, mintedAg
           </div>
         )}
 
-        {/* 结果展示 */}
-        {showReveal && (
+        {/* NFT卡片展示 - 桌面端 */}
+        {showReveal && !isMobile && (
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", bounce: 0.5 }}
-            className="w-full max-w-6xl px-4 max-h-[90vh] overflow-y-auto flex flex-col items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full h-full flex flex-col items-center justify-center p-4"
           >
-            <motion.div
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-center mb-8"
-            >
-              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-luxury-gold via-white to-luxury-gold font-display mb-4 drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]">
-                {t('squad.mintSuccess') || 'Mint Successful'}!
-              </h2>
-              <p className="text-xl text-white/60">{t('squad.newAgentsJoined') || 'New Agents have joined your squad'}</p>
-            </motion.div>
-
-            <div className={`grid gap-6 w-full ${
-              mintedAgents.length === 1 ? 'grid-cols-1 max-w-sm' :
-              mintedAgents.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-2xl' :
-              mintedAgents.length <= 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' :
-              'grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-            }`}>
+            {/* NFT卡片网格 - 一行最多5个 */}
+            <div className="flex flex-wrap justify-center gap-3 max-w-[1000px]">
               {mintedAgents.map((agent, index) => (
-                <motion.div
-                  key={agent.id}
-                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.4 + index * 0.1, type: "spring" }}
-                  className="relative group"
-                >
-                  {/* 光效背景 */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${
-                    agent.rarity === 'legendary' ? 'from-luxury-gold/50 to-luxury-purple/50' :
-                    agent.rarity === 'epic' ? 'from-luxury-purple/50 to-luxury-cyan/50' :
-                    agent.rarity === 'rare' ? 'from-luxury-cyan/50 to-luxury-green/50' :
-                    'from-white/20 to-white/5'
-                  } blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                  
-                  <div className="relative transform transition-transform duration-300 hover:scale-105">
-                    <AgentCard agent={agent} />
-                  </div>
-                </motion.div>
+                <NFTCard key={agent.id} agent={agent} index={index} />
               ))}
             </div>
 
+            {/* 确认按钮 */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
+              transition={{ delay: 0.5 + mintedAgents.length * 0.05 }}
               onClick={onClose}
-              className="mt-12 px-12 py-4 bg-gradient-to-r from-luxury-gold to-luxury-amber text-black font-bold text-lg rounded-xl hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+              className="mt-8 px-8 py-2.5 bg-gradient-to-r from-luxury-gold to-luxury-amber text-black font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+            >
+              {t('common.confirm') || 'Confirm'}
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* NFT卡片展示 - 移动端轮播 */}
+        {showReveal && isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full h-full flex flex-col items-center justify-center p-4"
+          >
+            {/* 进度指示器 */}
+            <div className="flex items-center gap-2 mb-6">
+              {mintedAgents.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    idx === currentIndex ? 'bg-luxury-gold w-6' : 'bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* 卡片轮播区域 */}
+            <div className="relative flex items-center justify-center w-full max-w-sm">
+              {/* 左箭头 */}
+              {mintedAgents.length > 1 && (
+                <button
+                  onClick={handlePrev}
+                  className="absolute left-0 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* 当前卡片 */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <NFTCardMobile agent={mintedAgents[currentIndex]} />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* 右箭头 */}
+              {mintedAgents.length > 1 && (
+                <button
+                  onClick={handleNext}
+                  className="absolute right-0 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+
+            {/* 计数器 */}
+            <div className="mt-4 text-white/40 text-sm">
+              {currentIndex + 1} / {mintedAgents.length}
+            </div>
+
+            {/* 确认按钮 */}
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={onClose}
+              className="mt-6 px-8 py-2.5 bg-gradient-to-r from-luxury-gold to-luxury-amber text-black font-bold rounded-full hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,215,0,0.3)]"
             >
               {t('common.confirm') || 'Confirm'}
             </motion.button>

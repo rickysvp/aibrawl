@@ -60,16 +60,17 @@ const TabBar: React.FC = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50">
-      {/* 顶部渐变遮罩 - 降低高度 */}
+      {/* 顶部渐变遮罩 */}
       <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-void via-void/60 to-transparent pointer-events-none" />
 
       {/* TabBar容器 */}
       <div className="relative bg-void-panel/80 backdrop-blur-md border-t border-white/5">
-        {/* 顶部光线 - 全宽 */}
+        {/* 顶部光线 */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-        <div className="max-w-screen-lg mx-auto px-4">
-          <div className="flex items-center justify-around py-1">
+        <div className="max-w-screen-lg mx-auto">
+          {/* 桌面端 - 完整显示 */}
+          <div className="hidden sm:flex items-center justify-around py-1 px-4">
             {tabs.map((tab, index) => {
               const isActive = index === activeIndex;
               const isHovered = index === hoveredIndex;
@@ -81,10 +82,10 @@ const TabBar: React.FC = () => {
                   onClick={() => navigate(tab.path)}
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
-                  className="relative flex flex-col items-center justify-center py-2 px-4 min-w-[80px] flex-1"
+                  className="relative flex flex-col items-center justify-center py-3 px-4 min-w-[80px] min-h-[56px] flex-1"
                   whileTap={{ scale: 0.95 }}
                 >
-                  {/* 激活指示器 - 顶部光条 - 全宽 */}
+                  {/* 激活指示器 */}
                   <motion.div
                     className="absolute -top-2 left-0 right-0 h-1 rounded-full"
                     style={{ backgroundColor: tab.color }}
@@ -100,9 +101,7 @@ const TabBar: React.FC = () => {
                   <motion.div
                     className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tab.gradient}`}
                     initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: isActive ? 0.15 : 0
-                    }}
+                    animate={{ opacity: isActive ? 0.15 : 0 }}
                     transition={{ duration: 0.3 }}
                   />
 
@@ -110,9 +109,7 @@ const TabBar: React.FC = () => {
                   <motion.div
                     className="absolute inset-0 rounded-2xl bg-white/5"
                     initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: !isActive && isHovered ? 1 : 0
-                    }}
+                    animate={{ opacity: !isActive && isHovered ? 1 : 0 }}
                     transition={{ duration: 0.2 }}
                   />
 
@@ -168,9 +165,6 @@ const TabBar: React.FC = () => {
                     style={{
                       color: isActive ? '#ffffff' : isHovered ? tab.color : 'rgba(255,255,255,0.5)'
                     }}
-                    animate={{
-                      y: isActive ? 0 : 0
-                    }}
                   >
                     {tab.label}
                   </motion.span>
@@ -181,6 +175,85 @@ const TabBar: React.FC = () => {
                       className="absolute top-2 right-3 w-2 h-2 rounded-full"
                       style={{ backgroundColor: tab.color }}
                       animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* 移动端 - 横向滚动，只显示图标 */}
+          <div className="flex sm:hidden items-center justify-around py-2 px-2">
+            {tabs.map((tab, index) => {
+              const isActive = index === activeIndex;
+              const Icon = tab.icon;
+
+              return (
+                <motion.button
+                  key={tab.path}
+                  onClick={() => navigate(tab.path)}
+                  className="relative flex flex-col items-center justify-center py-2 px-2 min-w-[60px] min-h-[48px] flex-1"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {/* 激活指示器 - 顶部 */}
+                  <motion.div
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full"
+                    style={{ backgroundColor: tab.color }}
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    animate={{
+                      opacity: isActive ? 1 : 0,
+                      scaleX: isActive ? 1 : 0
+                    }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+
+                  {/* 激活背景 */}
+                  <motion.div
+                    className={`absolute inset-0 rounded-xl bg-gradient-to-br ${tab.gradient}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isActive ? 0.2 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+
+                  {/* 图标 */}
+                  <motion.div
+                    className="relative"
+                    animate={{
+                      y: isActive ? -1 : 0,
+                      scale: isActive ? 1.15 : 1
+                    }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  >
+                    <Icon
+                      className="w-5 h-5 transition-colors duration-300"
+                      style={{
+                        color: isActive ? tab.color : 'rgba(255,255,255,0.5)'
+                      }}
+                      strokeWidth={isActive ? 2.5 : 2}
+                    />
+
+                    {/* 激活发光 */}
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-0 rounded-lg"
+                        style={{
+                          background: `radial-gradient(circle, ${tab.color}50 0%, transparent 70%)`,
+                          filter: 'blur(6px)'
+                        }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                  </motion.div>
+
+                  {/* 未读红点 */}
+                  {index === 3 && (
+                    <motion.div
+                      className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: tab.color }}
+                      animate={{ scale: [1, 1.3, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
                   )}

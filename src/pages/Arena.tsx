@@ -42,7 +42,7 @@ const LeaderboardMarquee: React.FC = () => {
                 <span className="text-xs text-white/40 font-mono">#{agent.rank}</span>
                 <span className={`text-xs font-medium ${agent.color}`}>{agent.name}</span>
                 <span className="text-xs text-luxury-green font-mono">+{agent.profit.toLocaleString()}</span>
-                <span className="text-[10px] text-white/20">$MON</span>
+                <span className="text-xs text-white/20">$MON</span>
               </div>
             ))}
           </div>
@@ -50,7 +50,7 @@ const LeaderboardMarquee: React.FC = () => {
         {/* 进入榜单按钮 */}
         <button
           onClick={() => navigate('/leaderboard')}
-          className="flex-shrink-0 px-3 py-2 bg-luxury-gold/10 border-l border-white/10 hover:bg-luxury-gold/20 transition-colors"
+          className="flex-shrink-0 px-3 py-2 bg-luxury-gold/10 border-l border-white/10 hover:bg-luxury-gold/20 active:bg-luxury-gold/30 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           title="查看完整榜单"
         >
           <ChevronRight className="w-5 h-5 text-luxury-gold" />
@@ -80,13 +80,11 @@ const Arena: React.FC = () => {
     systemAgents,
     wallet,
     initializeArena,
-    startNewRound,
     setArenaPhase,
     addBattleLog,
     updateParticipant,
     setTop3,
     myBattleLogs,
-    incrementSystemRound,
   } = useGameStore();
 
   const navigate = useNavigate();
@@ -157,11 +155,6 @@ const Arena: React.FC = () => {
     forceUpdate({}); // 触发重新渲染
   }, []);
   
-  const incrementRound = useCallback(() => {
-    timerStateRef.current.round += 1;
-    forceUpdate({}); // 触发重新渲染
-  }, []);
-  
   // 初始化竞技场
   useEffect(() => {
     if (systemAgents.length === 0) {
@@ -169,60 +162,52 @@ const Arena: React.FC = () => {
     }
   }, [initializeArena, systemAgents.length]);
   
-  // 战斗循环
+  // 观察用户Agents参与的战斗
   useEffect(() => {
     if (systemAgents.length === 0) return;
-    
+
     let isActive = true;
-    
-    const runBattleLoop = async () => {
+
+    const runObservationLoop = async () => {
       // 初始等待
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       while (isActive) {
-        // ===== 1. 准备阶段 - 选择参赛者 =====
-        syncPhaseToStore('selecting');
-        startNewRound();
-        incrementRound();
-        incrementSystemRound(); // 增加系统全局轮次计数
-        
-        // 使用更新后的系统总轮次作为本次战斗的轮次
-        // 注意：incrementSystemRound已经更新了totalSystemRounds，但React状态可能还没同步
-        // 所以我们使用useGameStore.getState().totalSystemRounds获取最新值
-        const currentSystemRound = useGameStore.getState().totalSystemRounds;
-        setDisplayBattleRound(currentSystemRound);
-        
-        // 获取当前最新的 agents 状态
+        // 获取当前状态
         const currentState = useGameStore.getState();
         const currentMyAgents = currentState.myAgents;
         const currentSystemAgents = currentState.systemAgents;
-        
-        // 优先选择用户的 Agents
+        const totalRounds = currentState.totalSystemRounds;
+
+        // 检查用户是否有Agents在竞技场
         const myArenaAgents = currentMyAgents.filter(a => a.status === 'in_arena');
-        const systemArenaAgents = currentSystemAgents.filter(a => a.status === 'in_arena' && a.hp > 0);
-        
-        // 如果没有足够的参赛者，等待后重试
-        if (myArenaAgents.length + systemArenaAgents.length < 2) {
-          console.log('等待更多参赛者...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // 如果用户没有Agents在竞技场，显示等待状态
+        if (myArenaAgents.length === 0) {
+          syncPhaseToStore('waiting');
+          setDisplayBattleRound(totalRounds);
+          await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
-        
-        // 优先选择用户 Agents，填满剩余位置用系统 Agents
-        let selectedParticipants: Agent[] = [];
 
-        // 先加入所有用户的 Agents（最多10个）
-        const shuffledMyAgents = [...myArenaAgents].sort(() => Math.random() - 0.5);
-        selectedParticipants = shuffledMyAgents.slice(0, 10);
+        // ===== 用户有Agents在竞技场，开始观察模式 =====
+        syncPhaseToStore('selecting');
 
-        // 如果用户 Agents 不足10个，用系统 Agents 补足
-        if (selectedParticipants.length < 10) {
-          const needed = 10 - selectedParticipants.length;
-          const shuffledSystem = [...systemArenaAgents].sort(() => Math.random() - 0.5);
-          selectedParticipants = [...selectedParticipants, ...shuffledSystem.slice(0, needed)];
-        }
+        // 使用当前系统总轮次作为观察轮次
+        setDisplayBattleRound(totalRounds);
 
-        // 再次随机打乱
+        // 随机选择1个用户Agent进行观察（如果用户有多个）
+        const observedAgent = myArenaAgents[Math.floor(Math.random() * myArenaAgents.length)];
+
+        // 选择参赛者：观察的Agent + 9个系统Agents
+        let selectedParticipants: Agent[] = [observedAgent];
+
+        // 用系统Agents补足到10个
+        const systemArenaAgents = currentSystemAgents.filter(a => a.status === 'in_arena' && a.id !== observedAgent.id);
+        const shuffledSystem = [...systemArenaAgents].sort(() => Math.random() - 0.5);
+        selectedParticipants = [...selectedParticipants, ...shuffledSystem.slice(0, 9)];
+
+        // 随机打乱位置
         selectedParticipants = selectedParticipants.sort(() => Math.random() - 0.5);
 
         // 重置参赛者状态
@@ -233,12 +218,11 @@ const Arena: React.FC = () => {
         // 记录日志
         addBattleLog({
           type: 'round_start',
-          message: `Round ${timerStateRef.current.round} started! ${selectedParticipants.length} participants`,
+          message: `观察战斗: ${observedAgent.name} 正在战斗!`,
           isHighlight: true,
         });
 
         // ===== 2. 逐个落座动画 (3秒) =====
-        // 先清空所有坑位
         syncParticipantsToStore([]);
         syncSelectedSlotsToStore([]);
 
@@ -246,75 +230,117 @@ const Arena: React.FC = () => {
 
         for (let i = 0; i < selectedParticipants.length; i++) {
           if (!isActive) return;
-
-          // 延迟创建当前坑位的参与者数组
           await new Promise(resolve => setTimeout(resolve, slotInterval));
 
-          // 构建当前已落座的参与者数组
           const currentParticipants: Agent[] = [];
           for (let j = 0; j <= i; j++) {
             currentParticipants[j] = selectedParticipants[j];
           }
 
-          // 同步到 store，触发落座动画
           syncParticipantsToStore(currentParticipants);
           syncSelectedSlotsToStore([...timerStateRef.current.selectedSlots, i]);
         }
 
-        // 等待坑位填满后再等待一下，确保动画完成
         await new Promise(resolve => setTimeout(resolve, 300));
 
         // ===== 3. 进入战场加载阶段 (1秒进度条) =====
         syncPhaseToStore('loading');
-        syncCountdownToStore(100); // 用 countdown 表示进度百分比
+        syncCountdownToStore(100);
 
-        // 100ms 更新一次，1秒内从 0% 到 100%
         for (let progress = 0; progress <= 100; progress += 10) {
           if (!isActive) return;
           syncCountdownToStore(progress);
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
-        // ===== 4. 战斗阶段 (10秒) =====
+
+        // ===== 4. 战斗阶段 (5秒，与后台战斗同步) =====
         syncPhaseToStore('fighting');
-        syncCountdownToStore(10);
-        
-        for (let i = 10; i > 0; i--) {
+        syncCountdownToStore(5);
+
+        for (let i = 5; i > 0; i--) {
           if (!isActive) return;
           syncCountdownToStore(i);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        
+
         // ===== 5. 结算阶段 =====
         syncPhaseToStore('settlement');
-        
-        // 计算结果
-        const currentParticipants = useGameStore.getState().arena.participants;
-        const results = currentParticipants.map(p => {
-          const survived = p.hp > 0;
-          const profit = survived ? Math.floor(Math.random() * 100) + 50 : -Math.floor(Math.random() * 30);
+
+        // 模拟战斗结果（实际应该从后台战斗结果获取）
+        const results = selectedParticipants.map(p => {
+          const isObserved = p.id === observedAgent.id;
+          // 观察的Agent有更高概率获胜
+          const winProbability = isObserved ? 0.4 : 0.1;
+          const survived = Math.random() < (0.3 + winProbability);
+          const profit = survived ? Math.floor(Math.random() * 500) : -Math.floor(Math.random() * 300);
           return { agent: p, profit, survived };
         });
-        
+
         // 排序获取TOP3
         const top3 = results
           .filter(r => r.survived)
           .sort((a, b) => b.profit - a.profit)
           .slice(0, 3);
-        
+
         setTop3(top3);
         setShowSettlement(true);
 
         addBattleLog({
           type: 'round_end',
-          message: `Round ${timerStateRef.current.round} ended! Champion: ${top3[0]?.agent.name || 'None'}`,
+          message: `战斗结束! 冠军: ${top3[0]?.agent.name || 'None'}`,
           isHighlight: true,
         });
 
-        // 重置参赛者状态
-        currentParticipants.forEach(p => {
-          const newStatus = p.hp > 0 ? 'in_arena' : 'dead';
-          updateParticipant(p.id, { status: newStatus, hp: p.maxHp });
+        // 更新每个Agent的战斗统计
+        results.forEach(r => {
+          const isWin = r.survived && r.profit > 0;
+          const isLoss = !r.survived || r.profit < 0;
+          
+          // 获取当前Agent的完整数据
+          const currentAgent = useGameStore.getState().myAgents.find(a => a.id === r.agent.id) ||
+                               useGameStore.getState().systemAgents.find(a => a.id === r.agent.id);
+          
+          if (currentAgent) {
+            const newWins = isWin ? currentAgent.wins + 1 : currentAgent.wins;
+            const newLosses = isLoss ? currentAgent.losses + 1 : currentAgent.losses;
+            const newTotalBattles = currentAgent.totalBattles + 1;
+            const newWinRate = Math.round((newWins / newTotalBattles) * 100);
+            const newNetProfit = currentAgent.netProfit + r.profit;
+            
+            // 添加战斗记录
+            const battleRecord = {
+              id: `battle-${Date.now()}-${r.agent.id}`,
+              timestamp: Date.now(),
+              opponent: 'Arena Battle',
+              result: isWin ? 'win' : 'loss' as 'win' | 'loss',
+              damageDealt: Math.abs(r.profit),
+              damageTaken: 0,
+              earnings: r.profit,
+              kills: r.survived ? 1 : 0,
+              isTournament: false,
+            };
+            
+            // 确保使用战斗结束时的最终余额
+            const finalBalance = r.agent.balance;
+            
+            updateParticipant(r.agent.id, {
+              status: r.survived ? 'in_arena' : 'dead',
+              hp: r.agent.maxHp,
+              balance: finalBalance,
+              wins: newWins,
+              losses: newLosses,
+              totalBattles: newTotalBattles,
+              winRate: newWinRate,
+              netProfit: newNetProfit,
+              battleHistory: [battleRecord, ...currentAgent.battleHistory].slice(0, 50),
+            });
+          } else {
+            // 系统Agent简单更新
+            updateParticipant(r.agent.id, {
+              status: r.survived ? 'in_arena' : 'dead',
+              hp: r.agent.maxHp,
+            });
+          }
         });
 
         // 3秒倒计时后关闭结算层
@@ -330,12 +356,15 @@ const Arena: React.FC = () => {
         setShowSettlement(false);
         
         // ===== 6. 等待阶段 =====
+        // 清空座位，显示等待状态
+        syncParticipantsToStore([]);
+        syncSelectedSlotsToStore([]);
         syncPhaseToStore('waiting');
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     };
     
-    runBattleLoop();
+    runObservationLoop();
     
     return () => {
       isActive = false;
@@ -391,16 +420,20 @@ const Arena: React.FC = () => {
           <div ref={leftPanelRef} className="lg:col-span-3 space-y-6 relative">
             {/* 战斗画面 */}
             <div className="card-luxury rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+              <div className="px-6 h-[72px] border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold text-white">BATTLE</h2>
+                  <h2 className="text-lg font-semibold text-white">BATTLE</h2>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 font-mono">
                     {t('arena.round')} {displayBattleRound.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-luxury-green/10 border border-luxury-green/20">
-                  <Users className="w-4 h-4 text-luxury-green" />
-                  <span className="text-sm text-luxury-green font-mono">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-luxury-green/5 border border-luxury-green/20 rounded-full">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-luxury-green opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-luxury-green"></span>
+                  </span>
+                  <Users className="w-3.5 h-3.5 text-luxury-green" />
+                  <span className="text-xs font-semibold text-luxury-green font-mono">
                     {systemAgents.filter(a => a.status === 'in_arena').length + myArenaAgents.length}
                   </span>
                 </div>
@@ -415,41 +448,41 @@ const Arena: React.FC = () => {
                 {/* 结算弹窗 */}
                 {showSettlement && arena.top3.length > 0 && (
                   <div className="absolute inset-0 z-50 flex items-center justify-center bg-void/70 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-void-panel/90 rounded-2xl overflow-hidden border border-luxury-gold/30 max-w-[280px] w-full mx-4 animate-scale-in shadow-2xl shadow-luxury-gold/20" style={{ transform: 'scale(0.85)' }}>
+                    <div className="bg-void-panel/90 rounded-2xl overflow-hidden border border-luxury-gold/30 max-w-[360px] w-[90%] animate-scale-in shadow-2xl shadow-luxury-gold/20">
                       {/* 头部 */}
-                      <div className="px-5 py-4 bg-gradient-to-r from-luxury-gold/20 via-luxury-amber/10 to-luxury-gold/20 border-b border-luxury-gold/20">
+                      <div className="px-4 py-3 bg-gradient-to-r from-luxury-gold/20 via-luxury-amber/10 to-luxury-gold/20 border-b border-luxury-gold/20">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-luxury-gold" />
+                            <Trophy className="w-4 h-4 text-luxury-gold" />
                             <div>
-                              <h3 className="text-sm font-bold text-luxury-gold font-display">{t('arena.round')} {displayBattleRound.toLocaleString()}</h3>
+                              <h3 className="text-xs font-bold text-luxury-gold font-display">{t('arena.round')} {displayBattleRound.toLocaleString()}</h3>
                               <p className="text-[10px] text-white/40">{t('leaderboard.top3')}</p>
                             </div>
                           </div>
                           <button
                             onClick={() => setShowSettlement(false)}
-                            className="p-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                            className="p-1 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
 
                       {/* TOP3 布局 - 第一名在上，二三名在下并排 */}
-                      <div className="p-4">
+                      <div className="p-3">
                         {/* 第一名 - 突出显示 */}
                         {arena.top3[0] && (
-                          <div className="mb-3 p-3 rounded-xl bg-gradient-to-r from-luxury-gold/30 to-luxury-amber/20 border border-luxury-gold/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-luxury-gold text-void flex items-center justify-center text-xl font-bold shadow-lg shadow-luxury-gold/30">
+                          <div className="mb-2 p-2.5 rounded-xl bg-gradient-to-r from-luxury-gold/30 to-luxury-amber/20 border border-luxury-gold/50">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-luxury-gold text-void flex items-center justify-center text-lg font-bold shadow-lg shadow-luxury-gold/30">
                                 🥇
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-white truncate">{arena.top3[0].agent.name}</p>
+                                <p className="text-xs font-bold text-white truncate">{arena.top3[0].agent.name}</p>
                                 <p className="text-[10px] text-luxury-gold">{t('tournament.winner')}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-lg font-bold font-mono" style={{ color: '#22c55e', textShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}>+{arena.top3[0].profit} <span className="text-[10px]">$MON</span></p>
+                                <p className="text-base font-bold font-mono" style={{ color: '#22c55e', textShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}>+{arena.top3[0].profit}</p>
                               </div>
                             </div>
                           </div>
@@ -458,33 +491,33 @@ const Arena: React.FC = () => {
                         {/* 第二、三名 - 并排显示 */}
                         <div className="grid grid-cols-2 gap-2">
                           {arena.top3[1] && (
-                            <div className="p-2.5 rounded-xl bg-gradient-to-r from-gray-400/20 to-gray-300/10 border border-gray-400/30">
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <div className="w-6 h-6 rounded-lg bg-gray-300 text-void flex items-center justify-center text-sm font-bold">
+                            <div className="p-2 rounded-xl bg-gradient-to-r from-gray-400/20 to-gray-300/10 border border-gray-400/30">
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <div className="w-5 h-5 rounded bg-gray-300 text-void flex items-center justify-center text-xs font-bold">
                                   🥈
                                 </div>
                                 <span className="text-[10px] text-gray-300">{t('tournament.runnerUp')}</span>
                               </div>
-                              <p className="text-xs font-semibold text-white truncate">{arena.top3[1].agent.name}</p>
-                              <p className="text-sm font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[1].profit} <span className="text-[8px]">$MON</span></p>
+                              <p className="text-[11px] font-semibold text-white truncate">{arena.top3[1].agent.name}</p>
+                              <p className="text-xs font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[1].profit}</p>
                             </div>
                           )}
                           {arena.top3[2] && (
-                            <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-700/20 to-amber-600/10 border border-amber-600/30">
-                              <div className="flex items-center gap-1.5 mb-1">
-                                <div className="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-sm font-bold">
+                            <div className="p-2 rounded-xl bg-gradient-to-r from-amber-700/20 to-amber-600/10 border border-amber-600/30">
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <div className="w-5 h-5 rounded bg-amber-600 text-white flex items-center justify-center text-xs font-bold">
                                   🥉
                                 </div>
                                 <span className="text-[10px] text-amber-600">{t('tournament.thirdPlace')}</span>
                               </div>
-                              <p className="text-xs font-semibold text-white truncate">{arena.top3[2].agent.name}</p>
-                              <p className="text-sm font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[2].profit} <span className="text-[8px]">$MON</span></p>
+                              <p className="text-[11px] font-semibold text-white truncate">{arena.top3[2].agent.name}</p>
+                              <p className="text-xs font-bold font-mono mt-0.5" style={{ color: '#22c55e', textShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}>+{arena.top3[2].profit}</p>
                             </div>
                           )}
                         </div>
 
                         {/* 提示 */}
-                        <p id="settlement-countdown" className="text-center text-white/30 text-xs mt-4">
+                        <p id="settlement-countdown" className="text-center text-white/30 text-[10px] mt-3">
                           {t('common.loading')}...
                         </p>
                       </div>
@@ -564,9 +597,9 @@ const Arena: React.FC = () => {
             {/* 小队概览 - 高度与左侧一致 */}
             <div className="card-luxury rounded-2xl overflow-hidden flex flex-col" style={{ height: leftPanelHeight > 0 ? leftPanelHeight : 'auto' }}>
               {/* 标题栏 + 铸造按钮 */}
-              <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+              <div className="px-6 h-[72px] border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold text-white">{t('squad.title')}</h2>
+                  <h2 className="text-lg font-semibold text-white">MY SQUAD</h2>
                 </div>
                 {/* 铸造按钮移到标题右侧 */}
                 {wallet.connected && myAgents.length < 30 && (

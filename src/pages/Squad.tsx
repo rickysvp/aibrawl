@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import AgentCard from '../components/AgentCard';
@@ -19,7 +19,12 @@ import {
   BatteryCharging,
   Rocket,
   Lock,
-  Target
+  Target,
+  Play,
+  Trophy,
+  Clock,
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 
 const Squad: React.FC = () => {
@@ -44,6 +49,56 @@ const Squad: React.FC = () => {
   const [batchAmount, setBatchAmount] = useState('');
   const [showBatchPanel, setShowBatchPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'balance' | 'profit' | 'winRate' | 'status'>('balance');
+
+  // 战斗回放状态
+  const [featuredBattle, setFeaturedBattle] = useState<{
+    agent: Agent;
+    battle: any;
+    opponent: Agent | null;
+    result: string;
+    profit: number;
+  } | null>(null);
+
+  // 获取随机战斗记录
+  const loadRandomBattle = () => {
+    const { myAgents, getRandomAgentBattleHistory } = useGameStore.getState();
+
+    // 筛选有战斗记录的agents
+    const agentsWithBattles = myAgents.filter(a => a.battleHistory.length > 0);
+
+    if (agentsWithBattles.length === 0) {
+      setFeaturedBattle(null);
+      return;
+    }
+
+    // 随机选择一个agent
+    const randomAgent = agentsWithBattles[Math.floor(Math.random() * agentsWithBattles.length)];
+
+    // 获取该agent的随机战斗记录
+    const battleHistory = getRandomAgentBattleHistory(randomAgent.id);
+
+    if (battleHistory) {
+      setFeaturedBattle({
+        agent: randomAgent,
+        battle: battleHistory.battle,
+        opponent: battleHistory.opponent,
+        result: battleHistory.result,
+        profit: battleHistory.profit,
+      });
+    }
+  };
+
+  // 组件挂载时加载随机战斗
+  useEffect(() => {
+    loadRandomBattle();
+
+    // 每30秒自动刷新一次
+    const interval = setInterval(() => {
+      loadRandomBattle();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
   
   const handleMint = async () => {
     if (!wallet.connected || wallet.balance < mintCost * mintCount) return;
@@ -254,7 +309,7 @@ const Squad: React.FC = () => {
     <div className="min-h-screen bg-void pt-24 pb-24">
       <div className="max-w-screen-xl mx-auto px-4">
         {/* 统计概览 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <div className="card-luxury rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-luxury-purple/10 border border-luxury-purple/20 flex items-center justify-center">
@@ -301,10 +356,137 @@ const Squad: React.FC = () => {
           </div>
         </div>
 
+        {/* 战斗回放 - 展示随机一个机器人在随机战斗中的表现 */}
+        {featuredBattle && (
+          <div className="card-luxury rounded-2xl overflow-hidden mb-8 border-luxury-rose/20">
+            <div className="px-6 py-4 border-b border-white/5 bg-gradient-to-r from-luxury-rose/10 to-transparent flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Play className="w-5 h-5 text-luxury-rose" />
+                <h3 className="text-lg font-semibold text-white">{t('squad.battleReplay') || '战斗回放'}</h3>
+                <span className="text-xs text-white/40">{t('squad.liveBattles') || '平台内1000+ Agents正在持续战斗'}</span>
+              </div>
+              <button
+                onClick={loadRandomBattle}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('squad.refresh') || '换一场'}
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* 我方Agent */}
+                <div className="flex-1 flex items-center gap-4">
+                  <div className="relative">
+                    <div
+                      className="w-16 h-16 rounded-xl overflow-hidden border-2"
+                      style={{ borderColor: featuredBattle.agent.color }}
+                    >
+                      {featuredBattle.agent.image ? (
+                        <img
+                          src={featuredBattle.agent.image}
+                          alt={featuredBattle.agent.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center"
+                          style={{ background: `linear-gradient(135deg, ${featuredBattle.agent.color}40, ${featuredBattle.agent.color}60)` }}
+                        >
+                          <span className="text-white font-bold text-lg">{featuredBattle.agent.name.slice(0, 2)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ backgroundColor: featuredBattle.agent.color }}
+                    >
+                      #{featuredBattle.agent.nftId}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">{featuredBattle.agent.name}</p>
+                    <p className="text-xs text-white/40">{featuredBattle.agent.totalBattles} {t('squad.totalBattles') || '场战斗'}</p>
+                  </div>
+                </div>
+
+                {/* VS 和结果 */}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="text-2xl font-bold text-white/20">VS</div>
+                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    featuredBattle.result === 'win'
+                      ? 'bg-luxury-green/20 text-luxury-green'
+                      : featuredBattle.result === 'draw'
+                      ? 'bg-luxury-amber/20 text-luxury-amber'
+                      : 'bg-luxury-rose/20 text-luxury-rose'
+                  }`}>
+                    {featuredBattle.result === 'win' ? (
+                      <><Trophy className="w-4 h-4" /> {t('squad.victory') || '胜利'}</>
+                    ) : featuredBattle.result === 'draw' ? (
+                      <><Target className="w-4 h-4" /> {t('squad.draw') || '平局'}</>
+                    ) : (
+                      <><Skull className="w-4 h-4" /> {t('squad.defeat') || '失败'}</>
+                    )}
+                  </div>
+                  <div className={`text-lg font-bold font-mono ${
+                    featuredBattle.profit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'
+                  }`}>
+                    {featuredBattle.profit >= 0 ? '+' : ''}{featuredBattle.profit.toLocaleString()} MON
+                  </div>
+                </div>
+
+                {/* 对手 */}
+                <div className="flex-1 flex items-center gap-4 justify-end">
+                  <div className="text-right">
+                    <p className="text-white font-semibold">{featuredBattle.battle.opponent}</p>
+                    <p className="text-xs text-white/40">{t('squad.opponent') || '对手'}</p>
+                  </div>
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white/20 bg-void-light flex items-center justify-center">
+                      {featuredBattle.opponent?.image ? (
+                        <img
+                          src={featuredBattle.opponent.image}
+                          alt={featuredBattle.opponent.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white/40 font-bold text-lg">?</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 战斗详情 */}
+              <div className="mt-6 pt-4 border-t border-white/5 grid grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-xs text-white/40 mb-1">{t('squad.damageDealt') || '造成伤害'}</p>
+                  <p className="text-lg font-mono font-bold text-luxury-rose">{featuredBattle.battle.damageDealt.toLocaleString()}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-white/40 mb-1">{t('squad.damageTaken') || '受到伤害'}</p>
+                  <p className="text-lg font-mono font-bold text-luxury-cyan">{featuredBattle.battle.damageTaken.toLocaleString()}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-white/40 mb-1">{t('squad.kills') || '击杀'}</p>
+                  <p className="text-lg font-mono font-bold text-luxury-gold">{featuredBattle.battle.kills}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-white/40 mb-1">{t('squad.battleTime') || '战斗时间'}</p>
+                  <p className="text-lg font-mono font-bold text-white">
+                    {new Date(featuredBattle.battle.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 快速铸造区 */}
         <div className="card-luxury rounded-2xl overflow-hidden mb-8 border-luxury-purple/20">
-          <div className="px-6 py-5 border-b border-white/5 bg-gradient-to-r from-luxury-purple/10 to-transparent">
-            <div className="flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-5 border-b border-white/5 bg-gradient-to-r from-luxury-purple/10 to-transparent">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-6 h-6 text-luxury-purple" />
                 <div>
@@ -312,19 +494,19 @@ const Squad: React.FC = () => {
                   <p className="text-xs text-white/40">{t('squad.mintCost')}: <span className="text-luxury-gold">{mintCost} $MON</span> / {t('squad.each')}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[1, 5, 10].map(count => (
                     <button
                       key={count}
                       onClick={() => setMintCount(count)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all min-h-[44px] ${
                         mintCount === count
                           ? 'bg-luxury-purple text-white shadow-lg shadow-luxury-purple/25'
                           : 'bg-void-light text-white/60 hover:text-white border border-white/10'
                       }`}
                     >
-                      {count}{t('squad.count')}
+                      {count}<span className="hidden sm:inline">{t('squad.count')}</span>
                     </button>
                   ))}
                 </div>
@@ -332,21 +514,23 @@ const Squad: React.FC = () => {
                 <button
                   onClick={handleMint}
                   disabled={isMinting || wallet.balance < mintCost * mintCount}
-                  className="group relative px-6 py-2.5 rounded-lg overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative px-4 sm:px-6 py-2.5 rounded-lg overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-luxury-purple via-luxury-purple-light to-luxury-cyan" />
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                  <span className="relative flex items-center gap-2 text-white font-semibold text-sm">
+                  <span className="relative flex items-center gap-2 text-white font-semibold text-sm whitespace-nowrap">
                     {isMinting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        {t('squad.minting')}...
+                        <span className="hidden sm:inline">{t('squad.minting')}...</span>
+                        <span className="sm:hidden">{t('squad.minting')}</span>
                       </>
                     ) : (
                       <>
                         <Plus className="w-4 h-4" />
-                        {t('squad.mint')} ({mintCost * mintCount} $MON)
+                        <span className="hidden sm:inline">{t('squad.mint')} ({mintCost * mintCount} $MON)</span>
+                        <span className="sm:hidden">{t('squad.mint')}</span>
                       </>
                     )}
                   </span>
@@ -357,15 +541,15 @@ const Squad: React.FC = () => {
         </div>
 
         {/* 筛选器 & 排序 & 批量操作 */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             {/* 状态筛选 */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-white/40">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 text-white/40 shrink-0">
                 <Filter className="w-4 h-4" />
-                <span className="text-sm">{t('arena.filter')}</span>
+                <span className="text-sm hidden sm:inline">{t('arena.filter')}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 {(['all', 'idle', 'in_arena', 'fighting'] as const).map(key => {
                   const config = getFilterConfig(key);
                   const Icon = config.icon;
@@ -373,14 +557,14 @@ const Squad: React.FC = () => {
                     <button
                       key={key}
                       onClick={() => setFilter(key)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[44px] ${
                         filter === key
                           ? `${config.color} text-white shadow-lg`
                           : 'bg-void-light text-white/60 hover:text-white border border-white/10'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
-                      {config.label}
+                      <Icon className="w-4 h-4" />
+                      <span className="hidden sm:inline">{config.label}</span>
                     </button>
                   );
                 })}
@@ -388,29 +572,29 @@ const Squad: React.FC = () => {
             </div>
 
             {/* 排序 */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-white/40">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 text-white/40 shrink-0">
                 <TrendingUp className="w-4 h-4" />
-                <span className="text-sm">{t('squad.sortBy')}</span>
+                <span className="text-sm hidden sm:inline">{t('squad.sortBy') || '排序'}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 scrollbar-hide">
                 {([
-                  { key: 'balance', label: t('squad.balance'), icon: Wallet },
-                  { key: 'profit', label: t('squad.profit'), icon: TrendingUp },
-                  { key: 'winRate', label: t('squad.winRate'), icon: Target },
-                  { key: 'status', label: t('squad.status'), icon: Zap }
+                  { key: 'balance', label: t('squad.balance') || '余额', icon: Wallet },
+                  { key: 'profit', label: t('squad.profit') || '收益', icon: TrendingUp },
+                  { key: 'winRate', label: t('squad.winRate') || '胜率', icon: Target },
+                  { key: 'status', label: t('squad.status') || '状态', icon: Zap }
                 ] as const).map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     onClick={() => setSortBy(key as typeof sortBy)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[44px] whitespace-nowrap ${
                       sortBy === key
                         ? 'bg-luxury-cyan/20 text-luxury-cyan border border-luxury-cyan/30'
                         : 'bg-void-light text-white/60 hover:text-white border border-white/10'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    {label}
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{label}</span>
                   </button>
                 ))}
               </div>
@@ -422,14 +606,15 @@ const Squad: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowBatchPanel(!showBatchPanel)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all min-h-[44px] ${
                   showBatchPanel
                     ? 'bg-luxury-cyan text-white shadow-lg shadow-luxury-cyan/25'
                     : 'bg-void-panel border border-white/10 text-white/70 hover:text-white hover:border-luxury-cyan/50'
                 }`}
               >
                 <Zap className="w-4 h-4" />
-                <span>{t('squad.batchOperations')}</span>
+                <span className="hidden sm:inline">{t('squad.batchOperations')}</span>
+                <span className="sm:hidden">{t('squad.batch')}</span>
                 {selectedAgents.size > 0 && (
                   <span className="bg-white/20 px-1.5 py-0.5 rounded-full text-xs">
                     {selectedAgents.size}
@@ -565,18 +750,7 @@ const Squad: React.FC = () => {
           )}
         </div>
 
-        {/* Agents 列表 - 表头 */}
-        {filteredAgents.length > 0 && (
-          <div className="hidden md:flex items-center gap-2 px-3 py-2 text-xs text-white/40 uppercase tracking-wider border-b border-white/5 mb-2">
-            <div className="w-8 flex-shrink-0"></div>
-            <div className="w-32 flex-shrink-0">{t('squad.name')}</div>
-            <div className="w-24 flex-shrink-0 text-right">{t('wallet.balance')}</div>
-            <div className="w-24 flex-shrink-0 text-right">{t('squad.profit')}</div>
-            <div className="flex-1 text-right">{t('squad.actions')}</div>
-          </div>
-        )}
-
-        {/* Agents 列表 */}
+        {/* Agents 网格布局 */}
         {filteredAgents.length === 0 ? (
           <div className="card-luxury rounded-2xl p-16 text-center">
             <div className="w-24 h-24 rounded-3xl bg-void-light/50 border border-white/5 flex items-center justify-center mx-auto mb-6">
@@ -590,37 +764,32 @@ const Squad: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredAgents.map(agent => (
               <div
                 key={agent.id}
                 className={`relative transition-all ${
-                  selectedAgents.has(agent.id) ? 'ring-2 ring-luxury-cyan rounded-xl' : ''
+                  selectedAgents.has(agent.id) ? 'ring-2 ring-luxury-cyan rounded-2xl' : ''
                 }`}
               >
-                {agent.status === 'idle' && showBatchPanel && selectedAgents.size > 0 && (
-                  <button
-                    onClick={() => toggleAgentSelection(agent.id)}
-                    className="absolute -top-2 -right-2 z-20 w-8 h-8 rounded-lg bg-luxury-cyan border-2 border-white flex items-center justify-center shadow-lg"
-                  >
-                    <CheckSquare className="w-5 h-5 text-white" />
-                  </button>
-                )}
-                {agent.status === 'idle' && showBatchPanel && selectedAgents.size === 0 && (
-                  <button
-                    onClick={() => toggleAgentSelection(agent.id)}
-                    className="absolute -top-2 -right-2 z-20 w-8 h-8 rounded-lg bg-void-panel border-2 border-white/30 flex items-center justify-center shadow-lg hover:border-luxury-cyan transition-colors"
-                  >
-                    <Square className="w-5 h-5 text-white/40" />
-                  </button>
-                )}
+                {/* 批量选择按钮 */}
                 {agent.status === 'idle' && showBatchPanel && (
-                  <div 
+                  <button
                     onClick={() => toggleAgentSelection(agent.id)}
-                    className="absolute inset-0 z-10 cursor-pointer"
-                  />
+                    className={`absolute -top-2 -right-2 z-20 w-8 h-8 rounded-lg border-2 flex items-center justify-center shadow-lg transition-all ${
+                      selectedAgents.has(agent.id)
+                        ? 'bg-luxury-cyan border-white'
+                        : 'bg-void-panel border-white/30 hover:border-luxury-cyan'
+                    }`}
+                  >
+                    {selectedAgents.has(agent.id) ? (
+                      <CheckSquare className="w-5 h-5 text-white" />
+                    ) : (
+                      <Square className="w-5 h-5 text-white/40" />
+                    )}
+                  </button>
                 )}
-                <AgentCard agent={agent} viewMode="list" />
+                <AgentCard agent={agent} />
               </div>
             ))}
           </div>

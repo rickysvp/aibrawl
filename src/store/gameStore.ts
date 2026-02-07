@@ -81,6 +81,13 @@ interface GameStore {
   setAutoBetRule: (rule: Partial<AutoBetRule>) => void;
   executeAutoBet: () => void;
   createPredictionMarketForTournament: (tournamentId: string, betType: 'semifinal' | 'final') => void;
+
+  // ==================== 后台自动战斗系统 ====================
+  autoBattleInterval: number | null;
+  startAutoBattleSystem: () => void;
+  stopAutoBattleSystem: () => void;
+  simulateAutoBattle: () => void;
+  getRandomAgentBattleHistory: (agentId: string) => { battle: any; opponent: Agent | null; result: string; profit: number } | null;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -240,8 +247,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   systemAgents: [],
   
   initializeArena: () => {
-    const systemAgents = generateSystemAgents(1000);
+    const systemAgents = generateSystemAgents(1000).map(agent => ({
+      ...agent,
+      status: 'in_arena' as const, // 系统agents自动加入竞技场
+      balance: 10000, // 系统Agents默认10000 MON余额
+    }));
     set({ systemAgents });
+    console.log('[Arena] 1000个系统Agents已初始化并加入竞技场，每个余额10000 MON');
   },
   
   startNewRound: () => {
@@ -1300,5 +1312,235 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       predictionMarkets: [...state.predictionMarkets, market],
     }));
+  },
+
+  // ==================== 后台自动战斗系统 ====================
+  autoBattleInterval: null,
+
+  startAutoBattleSystem: () => {
+    const state = get();
+    if (state.autoBattleInterval) return; // 已经在运行
+
+    // 每5秒执行一次自动战斗
+    const interval = window.setInterval(() => {
+      get().simulateAutoBattle();
+    }, 5000);
+
+    set({ autoBattleInterval: interval });
+    console.log('[AutoBattle] 系统自动战斗已启动');
+  },
+
+  stopAutoBattleSystem: () => {
+    const state = get();
+    if (state.autoBattleInterval) {
+      clearInterval(state.autoBattleInterval);
+      set({ autoBattleInterval: null });
+      console.log('[AutoBattle] 系统自动战斗已停止');
+    }
+  },
+
+  simulateAutoBattle: () => {
+    const state = get();
+    const { systemAgents, myAgents } = state;
+
+    // 获取所有在竞技场中的agents（包括用户的和系统的）
+    const allArenaAgents = [
+      ...myAgents.filter(a => a.status === 'in_arena' || a.status === 'fighting'),
+      ...systemAgents.filter(a => a.status === 'in_arena' || a.status === 'fighting'),
+    ];
+
+    console.log('[AutoBattle] 检查战斗条件:', {
+      myAgentsCount: myAgents.length,
+      myAgentsInArena: myAgents.filter(a => a.status === 'in_arena').length,
+      systemAgentsCount: systemAgents.length,
+      systemAgentsInArena: systemAgents.filter(a => a.status === 'in_arena').length,
+      totalArenaAgents: allArenaAgents.length,
+    });
+
+    if (allArenaAgents.length < 2) {
+      console.log('[AutoBattle] 跳过战斗: 参与者不足 (< 2)');
+      return; // 没有足够的参与者
+    }
+
+    // 随机选择10个agents进行一场战斗
+    const shuffled = [...allArenaAgents].sort(() => Math.random() - 0.5);
+    const selectedAgents = shuffled.slice(0, Math.min(10, shuffled.length));
+
+    // 记录每个agent的初始余额（深拷贝）
+    const initialBalances = new Map<string, number>();
+    selectedAgents.forEach(agent => {
+      initialBalances.set(agent.id, agent.balance);
+    });
+
+    // 创建战斗用的agent副本（避免直接修改原始对象）
+    let battleAgents = selectedAgents.map(agent => ({ ...agent }));
+    const battleRecords: any[] = [];
+
+    // 进行多轮攻击直到只剩1个或全部死亡
+    let round = 0;
+    const maxRounds = 20;
+
+    while (battleAgents.length > 1 && round < maxRounds) {
+      round++;
+
+      // 随机选择攻击者和目标
+      const attackerIndex = Math.floor(Math.random() * battleAgents.length);
+      let targetIndex = Math.floor(Math.random() * battleAgents.length);
+      while (targetIndex === attackerIndex) {
+        targetIndex = Math.floor(Math.random() * battleAgents.length);
+      }
+
+      const attacker = battleAgents[attackerIndex];
+      const target = battleAgents[targetIndex];
+
+      // 计算伤害
+      const isCrit = Math.random() > 0.8;
+      const baseDamage = attacker.attack - target.defense + Math.floor(Math.random() * 10);
+      const damage = Math.max(1, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
+
+      // 掠夺资金（不能超过目标的余额）
+      const lootAmount = Math.min(damage, target.balance);
+      const newTargetBalance = Math.max(0, target.balance - lootAmount);
+      const newAttackerBalance = attacker.balance + lootAmount;
+
+      // 记录战斗
+      battleRecords.push({
+        round,
+        attackerId: attacker.id,
+        attackerName: attacker.name,
+        targetId: target.id,
+        targetName: target.name,
+        damage: lootAmount,
+        isCrit,
+        timestamp: Date.now(),
+      });
+
+      // 更新战斗中的agents状态
+      attacker.balance = newAttackerBalance;
+      target.balance = newTargetBalance;
+
+      // 检查目标是否死亡
+      if (newTargetBalance <= 0) {
+        battleAgents = battleAgents.filter(a => a.id !== target.id);
+      }
+    }
+
+    // 确定胜者
+    const winner = battleAgents.length > 0
+      ? battleAgents.sort((a, b) => b.balance - a.balance)[0]
+      : null;
+
+    // 更新所有参与者的战斗统计到store
+    selectedAgents.forEach(originalAgent => {
+      const battleAgent = battleAgents.find(a => a.id === originalAgent.id) ||
+                         { ...originalAgent, balance: 0 }; // 如果不在存活列表中，说明已死亡
+      const isWinner = winner && originalAgent.id === winner.id;
+      const survived = battleAgent.balance > 0;
+      const initialBalance = initialBalances.get(originalAgent.id) || 0;
+      const profit = battleAgent.balance - initialBalance;
+
+      // 更新战斗统计
+      const newTotalBattles = originalAgent.totalBattles + 1;
+      const newWins = isWinner ? originalAgent.wins + 1 : originalAgent.wins;
+      const newLosses = survived && !isWinner ? originalAgent.losses : originalAgent.losses + 1;
+      const newWinRate = Math.round((newWins / newTotalBattles) * 100);
+      const newNetProfit = originalAgent.netProfit + profit;
+
+      // 添加战斗记录
+      const battleRecord = {
+        id: `autobattle-${Date.now()}-${originalAgent.id}`,
+        timestamp: Date.now(),
+        opponent: winner ? winner.name : 'Multiple Opponents',
+        result: isWinner ? 'win' : (survived ? 'draw' : 'loss') as 'win' | 'loss',
+        damageDealt: profit > 0 ? profit : 0,
+        damageTaken: profit < 0 ? Math.abs(profit) : 0,
+        earnings: profit,
+        kills: isWinner ? 1 : 0,
+        isTournament: false,
+      };
+
+      // 更新agent到store
+      set((state) => ({
+        myAgents: state.myAgents.map(a =>
+          a.id === originalAgent.id
+            ? {
+                ...a,
+                balance: battleAgent.balance,
+                totalBattles: newTotalBattles,
+                wins: newWins,
+                losses: newLosses,
+                winRate: newWinRate,
+                netProfit: newNetProfit,
+                battleHistory: [battleRecord, ...a.battleHistory].slice(0, 50),
+                status: 'in_arena' as const,
+              }
+            : a
+        ),
+        systemAgents: state.systemAgents.map(a =>
+          a.id === originalAgent.id
+            ? {
+                ...a,
+                balance: battleAgent.balance,
+                totalBattles: newTotalBattles,
+                wins: newWins,
+                losses: newLosses,
+                winRate: newWinRate,
+                netProfit: newNetProfit,
+                battleHistory: [battleRecord, ...a.battleHistory].slice(0, 50),
+                status: 'in_arena' as const,
+              }
+            : a
+        ),
+      }));
+    });
+
+    // 添加战斗日志
+    if (winner) {
+      const log: BattleLog = {
+        id: `autobattle-${Date.now()}`,
+        timestamp: Date.now(),
+        type: 'kill',
+        attacker: winner,
+        defender: selectedAgents.find(p => p.id !== winner.id) || selectedAgents[0],
+        message: `[AutoBattle] ${winner.name} 赢得了战斗！获得 ${winner.balance.toFixed(0)} MON`,
+        isHighlight: true,
+      };
+
+      set((state) => ({
+        myBattleLogs: [log, ...state.myBattleLogs].slice(0, 50),
+      }));
+    }
+
+    // 增加总轮次
+    set((state) => {
+      const newRounds = state.totalSystemRounds + 1;
+      console.log('[AutoBattle] 战斗完成，轮次增加到:', newRounds);
+      return { totalSystemRounds: newRounds };
+    });
+  },
+
+  getRandomAgentBattleHistory: (agentId: string) => {
+    const state = get();
+    const agent = state.myAgents.find(a => a.id === agentId) ||
+                  state.systemAgents.find(a => a.id === agentId);
+
+    if (!agent || agent.battleHistory.length === 0) {
+      return null;
+    }
+
+    // 随机选择一场战斗
+    const randomBattle = agent.battleHistory[Math.floor(Math.random() * agent.battleHistory.length)];
+
+    // 找到对手
+    const opponentName = randomBattle.opponent;
+    const opponent = state.systemAgents.find(a => a.name === opponentName) ||
+                    state.myAgents.find(a => a.name === opponentName);
+
+    return {
+      battle: randomBattle,
+      opponent: opponent || null,
+      result: randomBattle.result,
+      profit: randomBattle.earnings,
+    };
   },
 }));

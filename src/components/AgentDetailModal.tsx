@@ -139,14 +139,22 @@ const AgentDetailModal: React.FC<AgentDetailModalProps> = ({ agent, isOpen, onCl
                 <div className="flex gap-4 mb-6">
                   {/* NFT形象 - 左侧放大 */}
                   <div
-                    className="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    className="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                     style={{
                       background: `linear-gradient(135deg, ${rarity.color}40, ${rarity.color}60)`,
                       border: `3px solid ${rarity.color}`,
                       boxShadow: `0 0 50px ${rarity.color}50`
                     }}
                   >
-                    <PixelAgent agent={agent} size={128} />
+                    {agent.image ? (
+                      <img 
+                        src={agent.image} 
+                        alt={agent.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <PixelAgent agent={agent} size={128} />
+                    )}
                   </div>
 
                   {/* 余额和利润 - 右侧上下叠 */}

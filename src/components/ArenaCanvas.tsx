@@ -31,10 +31,12 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   
   // 战斗动画循环 - 使用余额作为血量
   useEffect(() => {
-    if (phase !== 'fighting' || participants.length < 2) return;
+    if (phase !== 'fighting') return;
 
     const battleInterval = setInterval(() => {
-      const aliveAgents = participants.filter(a => a.balance > 0);
+      // 每次从 store 获取最新的 participants 状态
+      const currentParticipants = useGameStore.getState().arena.participants;
+      const aliveAgents = currentParticipants.filter(a => a.balance > 0);
       if (aliveAgents.length < 2) return;
 
       const attackerIndex = Math.floor(Math.random() * aliveAgents.length);
@@ -46,8 +48,8 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       const attacker = aliveAgents[attackerIndex];
       const target = aliveAgents[targetIndex];
 
-      const attackerSlot = participants.findIndex(p => p.id === attacker.id);
-      const targetSlot = participants.findIndex(p => p.id === target.id);
+      const attackerSlot = currentParticipants.findIndex(p => p.id === attacker.id);
+      const targetSlot = currentParticipants.findIndex(p => p.id === target.id);
 
       if (attackerSlot === -1 || targetSlot === -1) return;
 
@@ -78,14 +80,21 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       // 延迟计算伤害
       setTimeout(() => {
+        // 再次获取最新状态
+        const latestParticipants = useGameStore.getState().arena.participants;
+        const latestAttacker = latestParticipants.find(p => p.id === attacker.id);
+        const latestTarget = latestParticipants.find(p => p.id === target.id);
+        
+        if (!latestAttacker || !latestTarget) return;
+        
         const isCrit = Math.random() > 0.8;
-        const baseDamage = attacker.attack - target.defense + Math.floor(Math.random() * 10);
+        const baseDamage = latestAttacker.attack - latestTarget.defense + Math.floor(Math.random() * 10);
         const damage = Math.max(1, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
 
         // 计算掠夺资金 (造成伤害的数值)
         const lootAmount = damage;
-        const newTargetBalance = Math.max(0, target.balance - lootAmount);
-        const newAttackerBalance = attacker.balance + lootAmount;
+        const newTargetBalance = Math.max(0, latestTarget.balance - lootAmount);
+        const newAttackerBalance = latestAttacker.balance + lootAmount;
 
         // 设置受伤动画
         setHurtAgents(prev => new Set(prev).add(target.id));
@@ -139,7 +148,7 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         updateParticipant(target.id, { balance: newTargetBalance, status: newTargetBalance <= 0 ? 'dead' : 'fighting' });
 
         // 更新攻击者余额（增加）
-        updateParticipant(attacker.id, { balance: newAttackerBalance });
+        updateParticipant(latestAttacker.id, { balance: newAttackerBalance });
 
         // 击杀效果
         if (newTargetBalance <= 0) {
@@ -152,25 +161,25 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
           addBattleLog({
             type: 'kill',
-            attacker,
-            defender: target,
-            message: `${attacker.name} 击杀了 ${target.name}！`,
+            attacker: latestAttacker,
+            defender: latestTarget,
+            message: `${latestAttacker.name} 击杀了 ${latestTarget.name}！`,
             isHighlight: true,
           });
-          updateParticipant(attacker.id, { kills: attacker.kills + 1 });
+          updateParticipant(latestAttacker.id, { kills: latestAttacker.kills + 1 });
         } else {
           addBattleLog({
             type: 'attack',
-            attacker,
-            defender: target,
-            message: `${attacker.name} 掠夺了 ${target.name} ${lootAmount} $MON`,
+            attacker: latestAttacker,
+            defender: latestTarget,
+            message: `${latestAttacker.name} 掠夺了 ${latestTarget.name} ${lootAmount} $MON`,
           });
         }
       }, 200);
     }, 400);
 
     return () => clearInterval(battleInterval);
-  }, [phase, participants, addBattleLog, updateParticipant]);
+  }, [phase]);
   
   // 子弹动画
   useEffect(() => {
@@ -540,15 +549,15 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       {phase === 'selecting' && (
         <div className="absolute inset-0 flex items-center justify-center bg-void/60 backdrop-blur-sm z-40">
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-3 h-3 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-3 h-3 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-3 h-3 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-4 h-4 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-4 h-4 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-4 h-4 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <div className="text-2xl font-bold text-luxury-gold font-display">
+            <div className="text-3xl font-bold text-luxury-gold font-display">
               正在选择参赛者
             </div>
-            <div className="text-sm text-white/40 mt-2">
+            <div className="text-base text-white/40 mt-3">
               随机抽取 10 名选手
             </div>
           </div>
@@ -573,11 +582,9 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       {phase === 'fighting' && (
         <>
           {/* 战斗倒计时 */}
-          <div className="absolute top-5 right-5 glass rounded-xl px-4 py-2 border border-luxury-cyan/20 z-20">
-            <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 text-luxury-cyan animate-pulse" />
-              <span className="text-lg font-bold text-luxury-cyan font-mono">{countdown}s</span>
-            </div>
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-luxury-cyan/10 border border-luxury-cyan/30 rounded-lg z-20">
+            <Timer className="w-3.5 h-3.5 text-luxury-cyan animate-pulse" />
+            <span className="text-sm font-bold text-luxury-cyan font-mono">{countdown}s</span>
           </div>
         </>
       )}

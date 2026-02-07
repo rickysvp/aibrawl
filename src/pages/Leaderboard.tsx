@@ -287,29 +287,29 @@ const Leaderboard: React.FC = () => {
                 <span className="text-sm font-medium text-white">TOP 100 Agents</span>
                 <span className="text-xs text-white/40">实时更新</span>
               </div>
-              <div className="max-h-[400px] overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto overflow-x-auto">
                 {/* 表头 */}
-                <div className="flex items-center px-4 py-2 text-xs text-white/40 border-b border-white/5 bg-void-panel/50">
+                <div className="flex items-center px-4 py-2 text-xs text-white/40 border-b border-white/5 bg-void-panel/50 min-w-[500px]">
                   <span className="w-8">排名</span>
                   <span className="flex-1">Agent</span>
-                  <span className="w-24 text-right">盈利</span>
-                  <span className="w-16 text-right">胜率</span>
-                  <span className="w-16 text-right">场次</span>
+                  <span className="w-20 sm:w-24 text-right">盈利</span>
+                  <span className="w-12 sm:w-16 text-right">胜率</span>
+                  <span className="w-12 sm:w-16 text-right">场次</span>
                 </div>
                 {currentAgents.map((agent) => (
                   <div
                     key={agent.rank}
-                    className="flex items-center px-4 py-2.5 border-b border-white/5 hover:bg-white/5 transition-colors"
+                    className="flex items-center px-4 py-2.5 border-b border-white/5 hover:bg-white/5 transition-colors min-w-[500px]"
                   >
                     <span className="w-8 text-xs text-white/40 font-mono">#{agent.rank}</span>
                     <div className="flex-1 flex items-center gap-3 min-w-0">
                       <NFTAvatar gradient={agent.nftImage} size="sm" />
                       <span className="text-sm text-white truncate">{agent.name}</span>
                     </div>
-                    <span className="w-24 text-right text-luxury-green font-mono text-sm">
+                    <span className="w-20 sm:w-24 text-right text-luxury-green font-mono text-sm">
                       +{agent.profit.toLocaleString()}
                     </span>
-                    <span className={`w-16 text-right text-xs ${agent.winRate >= 60 ? 'text-luxury-gold' : 'text-white/60'}`}>
+                    <span className={`w-12 sm:w-16 text-right text-xs ${agent.winRate >= 60 ? 'text-luxury-gold' : 'text-white/60'}`}>
                       {agent.winRate}%
                     </span>
                     <span className="w-16 text-right text-xs text-white/40 font-mono">
