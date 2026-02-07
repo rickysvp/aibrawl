@@ -9,7 +9,6 @@ import {
   Trophy,
   Target,
   Flame,
-  Crosshair,
   Wind,
   Sparkles,
   Gem,

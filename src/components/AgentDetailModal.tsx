@@ -8,7 +8,6 @@ import {
   Zap,
   Shield,
   Flame,
-  Crosshair,
   Wind,
   Trophy,
   Target,
@@ -223,18 +222,18 @@ const AgentDetailModal: React.FC<AgentDetailModalProps> = ({ agent, isOpen, onCl
                     </div>
                     <div className="text-center">
                       <Flame className="w-6 h-6 mx-auto text-luxury-amber mb-1" />
-                      <p className="text-lg font-bold text-luxury-amber font-mono">{agent.crit}</p>
-                      <p className="text-xs text-white/40">暴击</p>
-                    </div>
-                    <div className="text-center">
-                      <Crosshair className="w-6 h-6 mx-auto text-luxury-purple mb-1" />
-                      <p className="text-lg font-bold text-luxury-purple font-mono">{agent.hit}</p>
-                      <p className="text-xs text-white/40">命中</p>
+                      <p className="text-lg font-bold text-luxury-amber font-mono">{agent.critRate}</p>
+                      <p className="text-xs text-white/40">暴击率</p>
                     </div>
                     <div className="text-center">
                       <Wind className="w-6 h-6 mx-auto text-luxury-green mb-1" />
-                      <p className="text-lg font-bold text-luxury-green font-mono">{agent.agility}</p>
-                      <p className="text-xs text-white/40">敏捷</p>
+                      <p className="text-lg font-bold text-luxury-green font-mono">{agent.speed}</p>
+                      <p className="text-xs text-white/40">速度</p>
+                    </div>
+                    <div className="text-center">
+                      <Sparkles className="w-6 h-6 mx-auto text-luxury-purple mb-1" />
+                      <p className="text-lg font-bold text-luxury-purple font-mono">{agent.luck}</p>
+                      <p className="text-xs text-white/40">幸运</p>
                     </div>
                   </div>
                 </div>

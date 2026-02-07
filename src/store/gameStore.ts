@@ -7,8 +7,7 @@ import {
 } from '../types';
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
 import { useNotificationStore } from './notificationStore';
-import { AgentService, UserService, BattleService, TransactionService, RealtimeService, DataTransformers } from '../services/database';
-import { supabase } from '../lib/supabase';
+import { AgentService, UserService, TransactionService, DataTransformers } from '../services/database';
 
 interface GameStore {
   // 钱包状态
@@ -18,7 +17,7 @@ interface GameStore {
 
   // 玩家的 Agents
   myAgents: Agent[];
-  mintAgent: () => Agent | null;
+  mintAgent: () => Promise<Agent | null>;
   allocateFunds: (agentId: string, amount: number) => void;
   withdrawFunds: (agentId: string, amount: number) => void;
   joinArena: (agentId: string) => void;

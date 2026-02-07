@@ -95,7 +95,7 @@ const Arena: React.FC = () => {
   const [displayBattleRound, setDisplayBattleRound] = useState(1);
 
   // 排序状态
-  const [sortBy, setSortBy] = useState<'balance' | 'winRate' | 'profit'>('balance');
+  const [sortBy] = useState<'balance' | 'winRate' | 'profit'>('balance');
 
   // 用于测量左侧高度
   const leftPanelRef = useRef<HTMLDivElement>(null);

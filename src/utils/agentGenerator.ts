@@ -289,11 +289,14 @@ export const generateTournamentAgents = (count: number, startIndex: number = 0):
 
     const attack = 15 + Math.floor(Math.random() * 15);
     const defense = 8 + Math.floor(Math.random() * 8);
-    const crit = 10 + Math.floor(Math.random() * 10);
-    const hit = 12 + Math.floor(Math.random() * 12);
-    const agility = 10 + Math.floor(Math.random() * 10);
-    const totalStats = attack + defense + crit + hit + agility;
-    
+    const speed = 10 + Math.floor(Math.random() * 10);
+    const critRate = 10 + Math.floor(Math.random() * 10);
+    const critDamage = 12 + Math.floor(Math.random() * 12);
+    const evasion = 10 + Math.floor(Math.random() * 10);
+    const accuracy = 10 + Math.floor(Math.random() * 10);
+    const luck = 10 + Math.floor(Math.random() * 10);
+    const totalStats = attack + defense + speed + critRate + critDamage + evasion + accuracy + luck;
+
     const agent: Agent = {
       id: `tournament-${index}-${Math.random().toString(36).substr(2, 6)}`,
       name: `${prefix}${suffix}#${index + 1}`,
@@ -304,9 +307,12 @@ export const generateTournamentAgents = (count: number, startIndex: number = 0):
       maxHp: 150 + Math.floor(Math.random() * 100),
       attack,
       defense,
-      crit,
-      hit,
-      agility,
+      speed,
+      critRate,
+      critDamage,
+      evasion,
+      accuracy,
+      luck,
       totalStats,
       rarity: ['common', 'rare', 'epic', 'legendary', 'mythic'][Math.floor(Math.random() * 5)] as Rarity,
       balance: 500 + Math.floor(Math.random() * 500), // 500-1000 余额，足够报名

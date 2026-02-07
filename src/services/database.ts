@@ -1,5 +1,5 @@
 import { supabase, TABLES, DatabaseAgent, DatabaseUser, DatabaseBattle, DatabaseBattleLog, DatabaseTransaction } from '../lib/supabase';
-import { Agent, User, BattleLog, PredictionMarket, PredictionBet } from '../types';
+import { Agent } from '../types';
 
 // ==================== Agent 服务 ====================
 export const AgentService = {
