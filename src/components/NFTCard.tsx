@@ -91,29 +91,43 @@ const NFTCard: React.FC<NFTCardProps> = ({ agent, index = 0 }) => {
           </span>
         </div>
 
-        {/* NFT形象 - 占据主要空间 */}
+        {/* NFT形象 - 使用NFT图片 */}
         <div className="flex-1 mx-3 mb-2 rounded-xl overflow-hidden relative min-h-0">
           <div className={`absolute inset-0 bg-gradient-to-br ${rarity.bgGradient} opacity-40`} />
           <div className="absolute inset-0 flex items-center justify-center p-2">
-            <div 
-              className="w-full h-full max-w-[140px] max-h-[140px] rounded-xl"
-              style={{ 
-                backgroundColor: agent.color,
-                boxShadow: `0 0 40px ${agent.color}60, inset 0 0 20px rgba(255,255,255,0.1)`
-              }}
-            >
-              {/* 像素纹理 */}
-              <div 
-                className="w-full h-full opacity-30 rounded-xl"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.3) 55%, transparent 55%),
-                    linear-gradient(-45deg, transparent 45%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.3) 55%, transparent 55%)
-                  `,
-                  backgroundSize: '8px 8px'
+            {agent.image ? (
+              <img 
+                src={agent.image}
+                alt={agent.name}
+                className="w-full h-full max-w-[140px] max-h-[140px] rounded-xl object-cover"
+                style={{ 
+                  boxShadow: `0 0 40px ${agent.color}60, inset 0 0 20px rgba(255,255,255,0.1)`
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
                 }}
               />
-            </div>
+            ) : (
+              <div 
+                className="w-full h-full max-w-[140px] max-h-[140px] rounded-xl"
+                style={{ 
+                  backgroundColor: agent.color,
+                  boxShadow: `0 0 40px ${agent.color}60, inset 0 0 20px rgba(255,255,255,0.1)`
+                }}
+              >
+                {/* 像素纹理 */}
+                <div 
+                  className="w-full h-full opacity-30 rounded-xl"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.3) 55%, transparent 55%),
+                      linear-gradient(-45deg, transparent 45%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.3) 55%, transparent 55%)
+                    `,
+                    backgroundSize: '8px 8px'
+                  }}
+                />
+              </div>
+            )}
           </div>
           {/* 角标 */}
           <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 rounded-tl" style={{ borderColor: rarity.color }} />
@@ -136,8 +150,8 @@ const NFTCard: React.FC<NFTCardProps> = ({ agent, index = 0 }) => {
           </div>
           <div className="flex flex-col items-center py-1.5 rounded-lg bg-white/5">
             <Zap className="w-3 h-3 text-luxury-gold mb-0.5" />
-            <span className="text-sm font-bold text-white font-mono leading-none">{agent.agility}</span>
-            <span className="text-[8px] text-white/40 mt-0.5">AGI</span>
+            <span className="text-sm font-bold text-white font-mono leading-none">{agent.speed}</span>
+            <span className="text-[8px] text-white/40 mt-0.5">SPD</span>
           </div>
         </div>
 

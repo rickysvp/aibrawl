@@ -18,8 +18,8 @@ const Header: React.FC = () => {
     setShowLangMenu(false);
   };
 
-  const handleConnect = (type: 'twitter' | 'google' | 'wallet') => {
-    connectWallet(type);
+  const handleConnect = (nickname: string, type: 'twitter' | 'google' | 'wallet') => {
+    connectWallet(nickname, type);
     setShowConnectModal(false);
   };
 

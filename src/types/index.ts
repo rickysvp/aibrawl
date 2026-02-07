@@ -11,9 +11,12 @@ export interface Agent {
   // 基础属性 (11-99, 总和<333)
   attack: number;      // 攻击力
   defense: number;     // 防御力
-  crit: number;        // 暴击率
-  hit: number;         // 命中率
-  agility: number;     // 敏捷
+  speed: number;       // 速度
+  critRate: number;    // 暴击率
+  critDamage: number;  // 暴击伤害
+  evasion: number;     // 闪避率
+  accuracy: number;    // 命中率
+  luck: number;        // 幸运值
   totalStats: number;  // 属性总和
   rarity: Rarity;      // 稀有度
   // 战斗属性
@@ -98,6 +101,21 @@ export interface WalletState {
   loginType: 'twitter' | 'google' | 'wallet' | null;
   nickname: string;
   avatar: string;
+  userId?: string; // Supabase 用户 ID
+}
+
+// 用户类型
+export interface User {
+  id: string;
+  walletAddress?: string;
+  twitterId?: string;
+  googleId?: string;
+  email?: string;
+  username?: string;
+  avatar?: string;
+  balance: number;
+  totalProfit: number;
+  createdAt: number;
 }
 
 // 锦标赛类型

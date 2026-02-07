@@ -31,8 +31,14 @@ const rarityConfig: Record<Rarity, { minStats: number; maxStats: number; name: s
 // NFT编号计数器
 let nftIdCounter = 1000;
 
-// 生成随机 ID
-const generateId = () => Math.random().toString(36).substr(2, 9);
+// 生成 UUID
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 // 生成NFT编号
 const generateNftId = () => {
@@ -47,37 +53,50 @@ const generateNftImage = () => {
   return nftImages[Math.floor(Math.random() * nftImages.length)];
 };
 
-// 生成英文代号名称
+// 生成英文代号名称（系统Agent）
 const generateName = (_nftId: number) => {
   const prefix = codePrefixes[Math.floor(Math.random() * codePrefixes.length)];
   const suffix = codeSuffixes[Math.floor(Math.random() * codeSuffixes.length)];
   return `${prefix}-${suffix}`;
 };
 
+// 生成用户Agent名称（以用户昵称为前缀）
+export const generateUserAgentName = (userNickname: string, _nftId: number) => {
+  const prefix = codePrefixes[Math.floor(Math.random() * codePrefixes.length)];
+  const suffix = codeSuffixes[Math.floor(Math.random() * codeSuffixes.length)];
+  return `${userNickname}-${prefix}-${suffix}`;
+};
+
 // 生成属性点 (11-99, 总和<333)
 const generateStats = () => {
-  // 先生成5个11-99之间的随机数
+  // 生成8个11-99之间的随机数
   const minStat = 11;
   const maxStat = 99;
   const maxTotal = 332;
 
   let attack = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
   let defense = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
-  let crit = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
-  let hit = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
-  let agility = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let speed = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let critRate = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let critDamage = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let evasion = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let accuracy = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
+  let luck = minStat + Math.floor(Math.random() * (maxStat - minStat + 1));
 
-  let total = attack + defense + crit + hit + agility;
+  let total = attack + defense + speed + critRate + critDamage + evasion + accuracy + luck;
 
   // 如果总和超过332，按比例缩减
   if (total > maxTotal) {
     const ratio = maxTotal / total;
     attack = Math.max(minStat, Math.floor(attack * ratio));
     defense = Math.max(minStat, Math.floor(defense * ratio));
-    crit = Math.max(minStat, Math.floor(crit * ratio));
-    hit = Math.max(minStat, Math.floor(hit * ratio));
-    agility = Math.max(minStat, Math.floor(agility * ratio));
-    total = attack + defense + crit + hit + agility;
+    speed = Math.max(minStat, Math.floor(speed * ratio));
+    critRate = Math.max(minStat, Math.floor(critRate * ratio));
+    critDamage = Math.max(minStat, Math.floor(critDamage * ratio));
+    evasion = Math.max(minStat, Math.floor(evasion * ratio));
+    accuracy = Math.max(minStat, Math.floor(accuracy * ratio));
+    luck = Math.max(minStat, Math.floor(luck * ratio));
+    total = attack + defense + speed + critRate + critDamage + evasion + accuracy + luck;
   }
 
   // 计算稀有度
@@ -89,7 +108,7 @@ const generateStats = () => {
     }
   }
 
-  return { attack, defense, crit, hit, agility, totalStats: total, rarity };
+  return { attack, defense, speed, critRate, critDamage, evasion, accuracy, luck, totalStats: total, rarity };
 };
 
 // 生成战斗历史记录
@@ -164,9 +183,9 @@ const calculateAgentStats = (wins: number, losses: number, _kills: number, histo
 };
 
 // 生成随机 Agent
-export const generateRandomAgent = (isPlayer: boolean = false, isNew: boolean = false): Agent => {
+export const generateRandomAgent = (isPlayer: boolean = false, isNew: boolean = false, userNickname?: string): Agent => {
   const baseHp = 100 + Math.floor(Math.random() * 50);
-  
+
   // 如果是新铸造的 Agent，初始数据为 0
   const wins = isNew ? 0 : Math.floor(Math.random() * 30);
   const losses = isNew ? 0 : Math.floor(Math.random() * 20);
@@ -177,9 +196,14 @@ export const generateRandomAgent = (isPlayer: boolean = false, isNew: boolean = 
   const agentStats = generateStats();
   const nftId = generateNftId();
 
+  // 生成名称：用户Agent使用用户昵称作为前缀
+  const agentName = userNickname
+    ? generateUserAgentName(userNickname, nftId)
+    : generateName(nftId);
+
   return {
     id: generateId(),
-    name: generateName(nftId),
+    name: agentName,
     nftId: nftId,
     color: agentColors[Math.floor(Math.random() * agentColors.length)],
     image: generateNftImage(),

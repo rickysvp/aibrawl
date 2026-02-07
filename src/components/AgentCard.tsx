@@ -111,8 +111,8 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
   };
   
   const status = getStatusConfig();
-  const rarity = rarityConfig[agent.rarity];
-  const RarityIcon = rarity.icon;
+  const rarity = rarityConfig[agent.rarity] || rarityConfig['common'];
+  const RarityIcon = rarity?.icon || Sparkles;
 
   if (compact) {
     return (
@@ -364,10 +364,19 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
                     src={agent.image} 
                     alt={agent.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('[AgentCard] Image failed to load:', agent.image);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement?.querySelector('.pixel-fallback')?.classList.remove('hidden');
+                    }}
                   />
                 ) : (
                   <PixelAgent agent={agent} size={40} />
                 )}
+                {/* 图片加载失败时的备用显示 */}
+                <div className="pixel-fallback hidden absolute inset-0 flex items-center justify-center">
+                  <PixelAgent agent={agent} size={40} />
+                </div>
               </div>
             </div>
             
@@ -433,17 +442,17 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
                 <Shield className="w-3.5 h-3.5 mx-auto text-luxury-cyan mb-0.5" />
                 <p className="text-xs font-mono text-luxury-cyan">{agent.defense}</p>
               </div>
-              <div className="text-center" title="暴击">
+              <div className="text-center" title="暴击率">
                 <Flame className="w-3.5 h-3.5 mx-auto text-luxury-amber mb-0.5" />
-                <p className="text-xs font-mono text-luxury-amber">{agent.crit}</p>
+                <p className="text-xs font-mono text-luxury-amber">{agent.critRate}</p>
               </div>
-              <div className="text-center" title="命中">
-                <Crosshair className="w-3.5 h-3.5 mx-auto text-luxury-purple mb-0.5" />
-                <p className="text-xs font-mono text-luxury-purple">{agent.hit}</p>
-              </div>
-              <div className="text-center" title="敏捷">
+              <div className="text-center" title="速度">
                 <Wind className="w-3.5 h-3.5 mx-auto text-luxury-green mb-0.5" />
-                <p className="text-xs font-mono text-luxury-green">{agent.agility}</p>
+                <p className="text-xs font-mono text-luxury-green">{agent.speed}</p>
+              </div>
+              <div className="text-center" title="幸运">
+                <Sparkles className="w-3.5 h-3.5 mx-auto text-luxury-purple mb-0.5" />
+                <p className="text-xs font-mono text-luxury-purple">{agent.luck}</p>
               </div>
             </div>
           </div>

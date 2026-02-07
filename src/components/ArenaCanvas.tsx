@@ -568,12 +568,12 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       {phase === 'waiting' && (
         <div className="absolute inset-0 flex items-center justify-center z-30">
           <div className="text-center">
-            <div className="w-20 h-20 rounded-2xl bg-void-panel/80 border border-luxury-purple/20 flex items-center justify-center mb-4 mx-auto">
+            <div className="w-20 h-20 rounded-2xl bg-void-panel/80 border border-luxury-purple/20 flex items-center justify-center mx-auto mb-3">
               <div className="w-3 h-3 bg-luxury-purple rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-3 h-3 bg-luxury-cyan rounded-full animate-bounce mx-2" style={{ animationDelay: '150ms' }} />
               <div className="w-3 h-3 bg-luxury-gold rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <p className="text-xl text-white/60 font-medium">等待下一轮</p>
+            <p className="text-base text-white/60 font-medium">Waiting for next round</p>
           </div>
         </div>
       )}

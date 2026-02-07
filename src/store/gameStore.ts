@@ -7,11 +7,13 @@ import {
 } from '../types';
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
 import { useNotificationStore } from './notificationStore';
+import { AgentService, UserService, BattleService, TransactionService, RealtimeService, DataTransformers } from '../services/database';
+import { supabase } from '../lib/supabase';
 
 interface GameStore {
   // 钱包状态
   wallet: WalletState;
-  connectWallet: (type?: 'twitter' | 'google' | 'wallet') => void;
+  connectWallet: (nickname: string, type?: 'twitter' | 'google' | 'wallet') => void;
   disconnectWallet: () => void;
 
   // 玩家的 Agents
@@ -102,41 +104,79 @@ export const useGameStore = create<GameStore>((set, get) => ({
     avatar: '',
   },
 
-  connectWallet: (type: 'twitter' | 'google' | 'wallet' = 'wallet') => {
+  connectWallet: async (nickname: string, type: 'twitter' | 'google' | 'wallet' = 'wallet') => {
     const randomAddress = '0x' + Array.from({ length: 40 }, () =>
       Math.floor(Math.random() * 16).toString(16)
     ).join('');
 
-    // 生成昵称和头像
-    let nickname = '';
+    // 生成头像
     let avatar = '';
-
     if (type === 'twitter') {
-      const twitterNames = ['CryptoWhale', 'MoonHunter', 'AlphaTrader', 'DeFiKing', 'NFTCollector'];
-      nickname = twitterNames[Math.floor(Math.random() * twitterNames.length)];
       avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomAddress}&backgroundColor=1da1f2`;
     } else if (type === 'google') {
-      const googleNames = ['DiamondHands', 'TokenMaster', 'BlockChainer', 'Web3Explorer', 'ChainSurfer'];
-      nickname = googleNames[Math.floor(Math.random() * googleNames.length)];
       avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomAddress}&backgroundColor=4285f4`;
     } else {
-      // 钱包登录 - 使用后6位作为昵称，分配默认头像
-      nickname = randomAddress.slice(-6).toUpperCase();
       avatar = `https://api.dicebear.com/7.x/identicon/svg?seed=${randomAddress}&backgroundColor=b6e3f4`;
+    }
+
+    // 保存用户到 Supabase
+    let userId = randomAddress;
+    let userBalance = 10000; // 默认余额
+    try {
+      const userData: any = {
+        username: nickname,
+        avatar,
+        balance: 10000,
+      };
+
+      if (type === 'wallet') {
+        userData.wallet_address = randomAddress;
+      } else if (type === 'twitter') {
+        userData.twitter_id = randomAddress;
+      } else if (type === 'google') {
+        userData.google_id = randomAddress;
+      }
+
+      console.log('[Wallet] Creating/updating user:', userData);
+      const user = await UserService.getOrCreateUser(userData);
+      
+      if (!user || !user.id) {
+        throw new Error('User creation failed: no user or user.id returned');
+      }
+      
+      userId = user.id;
+      userBalance = user.balance || 10000; // 使用数据库中的余额
+      console.log(`[Wallet] User saved to Supabase: ${nickname} (${userId}), balance: ${userBalance}`);
+    } catch (error) {
+      console.error('[Wallet] Failed to save user:', error);
+      // 如果用户创建失败，使用随机地址作为 fallback
+      userId = randomAddress;
     }
 
     set({
       wallet: {
         connected: true,
         address: randomAddress,
-        balance: 10000,
+        balance: userBalance, // 使用数据库中的余额
         lockedBalance: 0,
         loginType: type,
         nickname,
         avatar,
+        userId, // 保存 Supabase 用户 ID
       }
     });
-    
+
+    // 从 Supabase 加载用户的 Agents
+    try {
+      const userAgents = await AgentService.getUserAgents(userId);
+      set({
+        myAgents: userAgents.map(DataTransformers.toFrontendAgent),
+      });
+      console.log(`[Wallet] Loaded ${userAgents.length} agents for user ${nickname}`);
+    } catch (error) {
+      console.error('[Wallet] Failed to load user agents:', error);
+    }
+
     useNotificationStore.getState().addNotification('success', `Connected as ${nickname}`, 'Wallet Connected');
   },
 
@@ -159,18 +199,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
   myAgents: [],
   mintCost: 100,
   
-  mintAgent: () => {
+  mintAgent: async () => {
     const { wallet, mintCost } = get();
-    if (!wallet.connected || wallet.balance < mintCost) return null;
-    
-    const newAgent = generateRandomAgent(true, true);
-    set((state) => ({
-      wallet: { ...state.wallet, balance: state.wallet.balance - mintCost },
-      myAgents: [...state.myAgents, newAgent],
-    }));
-    
-    useNotificationStore.getState().addNotification('success', `Minted ${newAgent.name} successfully`, 'Agent Minted');
-    return newAgent;
+    if (!wallet.connected || wallet.balance < mintCost) {
+      console.error('[Mint] Failed: Wallet not connected or insufficient balance');
+      return null;
+    }
+
+    try {
+      // 使用用户昵称生成 Agent 名称
+      const userNickname = wallet.nickname;
+      const userId = wallet.userId || wallet.address || 'anonymous';
+
+      console.log('[Mint] Starting mint process...');
+      console.log('[Mint] User ID:', userId);
+      console.log('[Mint] User nickname:', userNickname);
+
+      // 生成新 Agent（使用用户昵称作为前缀）
+      const newAgent = generateRandomAgent(true, true, userNickname);
+      console.log('[Mint] Generated agent:', newAgent.name);
+
+      // 准备数据库数据
+      const agentData = DataTransformers.toDatabaseAgent(newAgent, userId);
+      console.log('[Mint] Agent data for DB:', agentData);
+
+      // 保存到 Supabase
+      console.log('[Mint] Saving to Supabase...');
+      const dbAgent = await AgentService.createAgent({
+        ...agentData,
+        balance: 0,
+      });
+      console.log('[Mint] Agent saved to DB:', dbAgent.id);
+
+      // 创建交易记录
+      console.log('[Mint] Creating transaction...');
+      await TransactionService.createTransaction({
+        user_id: userId,
+        agent_id: dbAgent.id,
+        type: 'mint',
+        amount: -mintCost,
+        status: 'completed',
+      });
+      console.log('[Mint] Transaction created');
+
+      // 更新本地状态
+      const frontendAgent = DataTransformers.toFrontendAgent(dbAgent);
+      set((state) => ({
+        wallet: { ...state.wallet, balance: state.wallet.balance - mintCost },
+        myAgents: [...state.myAgents, frontendAgent],
+      }));
+
+      useNotificationStore.getState().addNotification('success', `Minted ${newAgent.name} successfully`, 'Agent Minted');
+      return frontendAgent;
+    } catch (error: any) {
+      console.error('[Mint] Failed with error:', error);
+      console.error('[Mint] Error message:', error.message);
+      console.error('[Mint] Error code:', error.code);
+      console.error('[Mint] Error details:', error.details);
+      useNotificationStore.getState().addNotification('error', `Failed to mint agent: ${error.message}`, 'Error');
+      return null;
+    }
   },
   
   allocateFunds: (agentId: string, amount: number) => {
@@ -246,14 +334,58 @@ export const useGameStore = create<GameStore>((set, get) => ({
   
   systemAgents: [],
   
-  initializeArena: () => {
-    const systemAgents = generateSystemAgents(1000).map(agent => ({
-      ...agent,
-      status: 'in_arena' as const, // 系统agents自动加入竞技场
-      balance: 10000, // 系统Agents默认10000 MON余额
-    }));
-    set({ systemAgents });
-    console.log('[Arena] 1000个系统Agents已初始化并加入竞技场，每个余额10000 MON');
+  initializeArena: async () => {
+    try {
+      // 从 Supabase 获取系统 Agents
+      const dbAgents = await AgentService.getSystemAgents(1000);
+      
+      if (dbAgents.length > 0) {
+        // 如果数据库已有系统 Agents，直接使用
+        const systemAgents = dbAgents.map(DataTransformers.toFrontendAgent);
+        set({ systemAgents });
+        console.log(`[Arena] 从数据库加载 ${systemAgents.length} 个系统Agents`);
+      } else {
+        // 如果数据库为空，生成并保存到数据库
+        console.log('[Arena] 数据库为空，生成系统Agents...');
+        const systemAgents = generateSystemAgents(1000).map(agent => ({
+          ...agent,
+          status: 'in_arena' as const,
+          balance: 10000,
+        }));
+        
+        // 批量保存到数据库
+        for (const agent of systemAgents) {
+          await AgentService.createAgent({
+            ...DataTransformers.toDatabaseAgent(agent, 'system'),
+            is_player: false,
+          });
+        }
+        
+        set({ systemAgents });
+        console.log('[Arena] 1000个系统Agents已保存到数据库');
+      }
+      
+      // 启动后台自动战斗系统
+      const state = get();
+      if (!state.autoBattleInterval) {
+        state.startAutoBattleSystem();
+      }
+    } catch (error) {
+      console.error('[Arena] 初始化失败:', error);
+      // 降级到本地生成
+      const systemAgents = generateSystemAgents(1000).map(agent => ({
+        ...agent,
+        status: 'in_arena' as const,
+        balance: 10000,
+      }));
+      set({ systemAgents });
+      
+      // 即使失败也启动自动战斗
+      const state = get();
+      if (!state.autoBattleInterval) {
+        state.startAutoBattleSystem();
+      }
+    }
   },
   
   startNewRound: () => {

@@ -36,6 +36,16 @@ const Squad: React.FC = () => {
     joinArena,
     connectWallet
   } = useGameStore();
+
+  // 调试日志
+  useEffect(() => {
+    console.log('[Squad] myAgents updated:', myAgents);
+    console.log('[Squad] myAgents count:', myAgents.length);
+    if (myAgents.length > 0) {
+      console.log('[Squad] First agent:', myAgents[0]);
+      console.log('[Squad] First agent image:', myAgents[0].image);
+    }
+  }, [myAgents]);
   
   const [mintCount, setMintCount] = useState(1);
   const [filter, setFilter] = useState<'all' | 'idle' | 'in_arena' | 'fighting'>('all');
@@ -110,7 +120,7 @@ const Squad: React.FC = () => {
 
     const newAgents: Agent[] = [];
     for (let i = 0; i < mintCount; i++) {
-      const agent = mintAgent();
+      const agent = await mintAgent();
       if (agent) {
         newAgents.push(agent);
       }
