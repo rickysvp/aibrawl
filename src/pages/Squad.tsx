@@ -22,9 +22,7 @@ import {
   Target,
   Play,
   Trophy,
-  Clock,
-  RefreshCw,
-  Eye
+  RefreshCw
 } from 'lucide-react';
 
 const Squad: React.FC = () => {

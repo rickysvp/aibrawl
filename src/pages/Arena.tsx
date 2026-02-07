@@ -6,7 +6,7 @@ import ArenaCanvas from '../components/ArenaCanvas';
 import BattleLog from '../components/BattleLog';
 import AgentCard from '../components/AgentCard';
 import { Agent } from '../types';
-import { Swords, Users, Trophy, Zap, Plus, Wallet, X, ChevronRight } from 'lucide-react';
+import { Swords, Users, Trophy, Plus, Wallet, X, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // 生成今日 TOP 100 排行榜数据

@@ -48,7 +48,7 @@ const generateNftImage = () => {
 };
 
 // 生成英文代号名称
-const generateName = (nftId: number) => {
+const generateName = (_nftId: number) => {
   const prefix = codePrefixes[Math.floor(Math.random() * codePrefixes.length)];
   const suffix = codeSuffixes[Math.floor(Math.random() * codeSuffixes.length)];
   return `${prefix}-${suffix}`;

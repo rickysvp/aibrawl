@@ -17,8 +17,7 @@ import {
   TrendingUp,
   Wallet,
   Info,
-  LogOut,
-  Copy
+  LogOut
 } from 'lucide-react';
 
 interface AgentCardProps {
