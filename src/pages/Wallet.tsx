@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
+import { TransactionService } from '../services/database';
 import { 
   Wallet, 
   TrendingUp, 
@@ -87,14 +88,56 @@ const WalletPage: React.FC = () => {
   // 加载状态
   const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
 
-  // 模拟交易记录
-  const transactions: Transaction[] = [
-    { id: '1', type: 'swap', amount: -100, timestamp: Date.now() - 1800000, description: t('wallet.swap'), status: 'completed', txHash: '0x1234...5678' },
-    { id: '2', type: 'mint', amount: -100, timestamp: Date.now() - 3600000, description: t('wallet.mintAgent'), status: 'completed', txHash: '0xabcd...efgh' },
-    { id: '3', type: 'battle_win', amount: 50, timestamp: Date.now() - 7200000, description: t('wallet.battleWin'), status: 'completed' },
-    { id: '4', type: 'battle_loss', amount: -30, timestamp: Date.now() - 10800000, description: t('wallet.battleLoss'), status: 'completed' },
-    { id: '5', type: 'deposit', amount: 500, timestamp: Date.now() - 86400000, description: t('wallet.deposit'), status: 'completed', txHash: '0x9876...5432' },
-  ];
+  // 真实交易记录
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+
+  // 加载交易记录
+  useEffect(() => {
+    const loadTransactions = async () => {
+      if (!wallet.connected || !wallet.userId) {
+        setTransactions([]);
+        return;
+      }
+
+      setIsLoadingTransactions(true);
+      try {
+        const dbTransactions = await TransactionService.getUserTransactions(wallet.userId, 50);
+        const formattedTransactions: Transaction[] = dbTransactions.map(tx => ({
+          id: tx.id,
+          type: tx.type as Transaction['type'],
+          amount: tx.amount,
+          timestamp: new Date(tx.created_at).getTime(),
+          description: getTransactionDescription(tx.type),
+          status: tx.status as Transaction['status'],
+          txHash: tx.tx_hash,
+        }));
+        setTransactions(formattedTransactions);
+      } catch (error) {
+        console.error('[Wallet] Failed to load transactions:', error);
+      } finally {
+        setIsLoadingTransactions(false);
+      }
+    };
+
+    loadTransactions();
+  }, [wallet.connected, wallet.userId, wallet.balance]); // 余额变化时刷新
+
+  // 获取交易描述
+  const getTransactionDescription = (type: string): string => {
+    switch (type) {
+      case 'mint': return t('wallet.mintAgent');
+      case 'battle_win': return t('wallet.battleWin');
+      case 'battle_loss': return t('wallet.battleLoss');
+      case 'deposit': return t('wallet.deposit');
+      case 'withdraw': return t('wallet.withdraw');
+      case 'swap': return t('wallet.swap');
+      case 'stake': return t('wallet.stake');
+      case 'unstake': return t('wallet.unstake');
+      case 'reward': return t('wallet.reward');
+      default: return type;
+    }
+  };
 
   // Monad RealNads NFT 数据 - 使用本地图片
   const nfts: NFT[] = [
@@ -1122,14 +1165,21 @@ const WalletPage: React.FC = () => {
                 })}
               </div>
 
-              {filteredTransactions.length === 0 && (
+              {isLoadingTransactions ? (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-void-light/50 border border-white/5 flex items-center justify-center mx-auto mb-4">
+                    <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
+                  </div>
+                  <p className="text-white/40">{t('common.loading')}...</p>
+                </div>
+              ) : filteredTransactions.length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="w-16 h-16 rounded-2xl bg-void-light/50 border border-white/5 flex items-center justify-center mx-auto mb-4">
                     <Clock className="w-8 h-8 text-white/20" />
                   </div>
                   <p className="text-white/40">{t('wallet.noTransactions')}</p>
                 </div>
-              )}
+              ) : null}
 
               {filteredTransactions.length > 5 && (
                 <div className="p-4 text-center border-t border-white/5">
