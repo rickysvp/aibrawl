@@ -118,65 +118,71 @@ export const useGameStore = create<GameStore>((set, get) => ({
       avatar = `https://api.dicebear.com/7.x/identicon/svg?seed=${randomAddress}&backgroundColor=b6e3f4`;
     }
 
-    // 保存用户到 Supabase
-    let userId = randomAddress;
-    let userBalance = 10000; // 默认余额
-    try {
-      const userData: any = {
-        username: nickname,
-        avatar,
-        balance: 10000,
-      };
-
-      if (type === 'wallet') {
-        userData.wallet_address = randomAddress;
-      } else if (type === 'twitter') {
-        userData.twitter_id = randomAddress;
-      } else if (type === 'google') {
-        userData.google_id = randomAddress;
-      }
-
-      console.log('[Wallet] Creating/updating user:', userData);
-      const user = await UserService.getOrCreateUser(userData);
-      
-      if (!user || !user.id) {
-        throw new Error('User creation failed: no user or user.id returned');
-      }
-      
-      userId = user.id;
-      userBalance = user.balance || 10000; // 使用数据库中的余额
-      console.log(`[Wallet] User saved to Supabase: ${nickname} (${userId}), balance: ${userBalance}`);
-    } catch (error) {
-      console.error('[Wallet] Failed to save user:', error);
-      // 如果用户创建失败，使用随机地址作为 fallback
-      userId = randomAddress;
-    }
+    // 预登录：立即设置登录状态，让用户可以立即使用界面
+    const userId = randomAddress;
+    const userBalance = 10000; // 默认余额
 
     set({
       wallet: {
         connected: true,
         address: randomAddress,
-        balance: userBalance, // 使用数据库中的余额
+        balance: userBalance,
         lockedBalance: 0,
         loginType: type,
         nickname,
         avatar,
-        userId, // 保存 Supabase 用户 ID
+        userId,
       }
     });
 
-    // 从 Supabase 加载用户的 Agents
-    try {
-      const userAgents = await AgentService.getUserAgents(userId);
-      set({
-        myAgents: userAgents.map(DataTransformers.toFrontendAgent),
-      });
-      console.log(`[Wallet] Loaded ${userAgents.length} agents for user ${nickname}`);
-    } catch (error) {
-      console.error('[Wallet] Failed to load user agents:', error);
-    }
-
     useNotificationStore.getState().addNotification('success', `Connected as ${nickname}`, 'Wallet Connected');
+
+    // 后台异步保存用户到 Supabase（不阻塞用户体验）
+    (async () => {
+      try {
+        const userData: any = {
+          username: nickname,
+          avatar,
+          balance: 10000,
+        };
+
+        if (type === 'wallet') {
+          userData.wallet_address = randomAddress;
+        } else if (type === 'twitter') {
+          userData.twitter_id = randomAddress;
+        } else if (type === 'google') {
+          userData.google_id = randomAddress;
+        }
+
+        console.log('[Wallet] Creating/updating user:', userData);
+        const user = await UserService.getOrCreateUser(userData);
+
+        if (user && user.id) {
+          // 更新真实的 userId 和余额
+          set((state) => ({
+            wallet: {
+              ...state.wallet,
+              userId: user.id,
+              balance: user.balance || 10000,
+            }
+          }));
+          console.log(`[Wallet] User saved to Supabase: ${nickname} (${user.id})`);
+
+          // 加载用户的 Agents
+          try {
+            const userAgents = await AgentService.getUserAgents(user.id);
+            set({
+              myAgents: userAgents.map(DataTransformers.toFrontendAgent),
+            });
+            console.log(`[Wallet] Loaded ${userAgents.length} agents for user ${nickname}`);
+          } catch (agentError) {
+            console.error('[Wallet] Failed to load user agents:', agentError);
+          }
+        }
+      } catch (error) {
+        console.error('[Wallet] Failed to save user:', error);
+      }
+    })();
   },
 
   disconnectWallet: () => {
