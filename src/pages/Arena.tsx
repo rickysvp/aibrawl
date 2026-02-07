@@ -450,13 +450,13 @@ const Arena: React.FC = () => {
                   countdown={currentCountdown}
                   selectedSlots={currentSelectedSlots}
                 />
-                
-                {/* 结算弹窗 */}
+
+                {/* 结算弹窗 - 在竞技场画布内显示 */}
                 {showSettlement && arena.top3.length > 0 && (
-                  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-void/80 backdrop-blur-md animate-fade-in">
-                    <div className="bg-void-panel/95 rounded-2xl overflow-hidden border border-white/10 max-w-[320px] w-[85%] animate-scale-in shadow-2xl">
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-void/90 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-void-panel/95 rounded-2xl overflow-hidden border border-white/10 max-w-[280px] w-[80%] animate-scale-in shadow-2xl">
                       {/* 头部 - 简洁显示轮次 */}
-                      <div className="px-4 py-2.5 bg-gradient-to-r from-luxury-gold/10 to-luxury-amber/5 border-b border-white/5 flex items-center justify-between">
+                      <div className="px-4 py-2 bg-gradient-to-r from-luxury-gold/10 to-luxury-amber/5 border-b border-white/5 flex items-center justify-between">
                         <span className="text-xs font-medium text-white/60">Round {displayBattleRound.toLocaleString()}</span>
                         <button
                           onClick={() => setShowSettlement(false)}
@@ -469,48 +469,48 @@ const Arena: React.FC = () => {
                       {/* TOP3 列表 - 简洁风格 */}
                       <div className="p-3 space-y-2">
                         {arena.top3.map((result, index) => (
-                          <div 
+                          <div
                             key={result.agent.id}
-                            className={`flex items-center gap-3 p-2.5 rounded-xl ${
+                            className={`flex items-center gap-3 p-2 rounded-xl ${
                               index === 0 ? 'bg-luxury-gold/10 border border-luxury-gold/30' :
                               index === 1 ? 'bg-white/5 border border-white/10' :
                               'bg-white/5 border border-white/10'
                             }`}
                           >
                             {/* 排名数字 */}
-                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-sm font-bold ${
+                            <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-bold ${
                               index === 0 ? 'bg-luxury-gold text-void' :
                               index === 1 ? 'bg-white/20 text-white' :
                               'bg-white/10 text-white/70'
                             }`}>
                               {index + 1}
                             </div>
-                            
+
                             {/* Agent 头像 */}
-                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-void-light">
+                            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-void-light">
                               {result.agent.image ? (
-                                <img 
-                                  src={result.agent.image} 
+                                <img
+                                  src={result.agent.image}
                                   alt={result.agent.name}
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div 
+                                <div
                                   className="w-full h-full"
                                   style={{ backgroundColor: result.agent.color }}
                                 />
                               )}
                             </div>
-                            
+
                             {/* Agent 信息 */}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-white truncate">{result.agent.name}</p>
-                              <p className="text-xs text-white/40">#{result.agent.nftId || result.agent.id.slice(-4)}</p>
+                              <p className="text-xs font-medium text-white truncate">{result.agent.name}</p>
+                              <p className="text-[10px] text-white/40">#{result.agent.nftId || result.agent.id.slice(-4)}</p>
                             </div>
-                            
+
                             {/* 盈利 */}
                             <div className="text-right">
-                              <p className="text-sm font-bold font-mono text-luxury-green">+{result.profit}</p>
+                              <p className="text-xs font-bold font-mono text-luxury-green">+{result.profit}</p>
                             </div>
                           </div>
                         ))}

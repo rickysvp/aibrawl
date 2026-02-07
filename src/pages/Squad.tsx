@@ -19,10 +19,7 @@ import {
   BatteryCharging,
   Rocket,
   Lock,
-  Target,
-  Play,
-  Trophy,
-  RefreshCw
+  Target
 } from 'lucide-react';
 
 const Squad: React.FC = () => {
@@ -57,56 +54,6 @@ const Squad: React.FC = () => {
   const [batchAmount, setBatchAmount] = useState('');
   const [showBatchPanel, setShowBatchPanel] = useState(false);
   const [sortBy, setSortBy] = useState<'balance' | 'profit' | 'winRate' | 'status'>('balance');
-
-  // 战斗回放状态
-  const [featuredBattle, setFeaturedBattle] = useState<{
-    agent: Agent;
-    battle: any;
-    opponent: Agent | null;
-    result: string;
-    profit: number;
-  } | null>(null);
-
-  // 获取随机战斗记录
-  const loadRandomBattle = () => {
-    const { myAgents, getRandomAgentBattleHistory } = useGameStore.getState();
-
-    // 筛选有战斗记录的agents
-    const agentsWithBattles = myAgents.filter(a => a.battleHistory.length > 0);
-
-    if (agentsWithBattles.length === 0) {
-      setFeaturedBattle(null);
-      return;
-    }
-
-    // 随机选择一个agent
-    const randomAgent = agentsWithBattles[Math.floor(Math.random() * agentsWithBattles.length)];
-
-    // 获取该agent的随机战斗记录
-    const battleHistory = getRandomAgentBattleHistory(randomAgent.id);
-
-    if (battleHistory) {
-      setFeaturedBattle({
-        agent: randomAgent,
-        battle: battleHistory.battle,
-        opponent: battleHistory.opponent,
-        result: battleHistory.result,
-        profit: battleHistory.profit,
-      });
-    }
-  };
-
-  // 组件挂载时加载随机战斗
-  useEffect(() => {
-    loadRandomBattle();
-
-    // 每30秒自动刷新一次
-    const interval = setInterval(() => {
-      loadRandomBattle();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
   
   const handleMint = async () => {
     if (!wallet.connected || wallet.balance < mintCost * mintCount) return;
@@ -363,133 +310,6 @@ const Squad: React.FC = () => {
             <p className="text-3xl font-bold text-luxury-cyan font-mono">{avgWinRate}%</p>
           </div>
         </div>
-
-        {/* 战斗回放 - 展示随机一个机器人在随机战斗中的表现 */}
-        {featuredBattle && (
-          <div className="card-luxury rounded-2xl overflow-hidden mb-8 border-luxury-rose/20 font-apple">
-            <div className="px-6 py-4 border-b border-white/5 bg-gradient-to-r from-luxury-rose/10 to-transparent flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Play className="w-5 h-5 text-luxury-rose" />
-                <h3 className="text-lg font-semibold text-white tracking-tight">{t('squad.battleReplay') || '战斗回放'}</h3>
-                <span className="text-xs text-white/40 tracking-tight">{t('squad.liveBattles') || '平台内1000+ Agents正在持续战斗'}</span>
-              </div>
-              <button
-                onClick={loadRandomBattle}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-sm transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                {t('squad.refresh') || '换一场'}
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="flex items-center justify-between gap-4">
-                {/* 我方Agent */}
-                <div className="flex-1 flex items-center gap-4">
-                  <div className="relative">
-                    <div
-                      className="w-16 h-16 rounded-xl overflow-hidden border-2"
-                      style={{ borderColor: featuredBattle.agent.color }}
-                    >
-                      {featuredBattle.agent.image ? (
-                        <img
-                          src={featuredBattle.agent.image}
-                          alt={featuredBattle.agent.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center"
-                          style={{ background: `linear-gradient(135deg, ${featuredBattle.agent.color}40, ${featuredBattle.agent.color}60)` }}
-                        >
-                          <span className="text-white font-bold text-lg">{featuredBattle.agent.name.slice(0, 2)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ backgroundColor: featuredBattle.agent.color }}
-                    >
-                      #{featuredBattle.agent.nftId}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">{featuredBattle.agent.name}</p>
-                    <p className="text-xs text-white/40">{featuredBattle.agent.totalBattles} {t('squad.totalBattles') || '场战斗'}</p>
-                  </div>
-                </div>
-
-                {/* VS 和结果 */}
-                <div className="flex flex-col items-center gap-2">
-                  <div className="text-2xl font-bold text-white/20">VS</div>
-                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                    featuredBattle.result === 'win'
-                      ? 'bg-luxury-green/20 text-luxury-green'
-                      : featuredBattle.result === 'draw'
-                      ? 'bg-luxury-amber/20 text-luxury-amber'
-                      : 'bg-luxury-rose/20 text-luxury-rose'
-                  }`}>
-                    {featuredBattle.result === 'win' ? (
-                      <><Trophy className="w-4 h-4" /> {t('squad.victory') || '胜利'}</>
-                    ) : featuredBattle.result === 'draw' ? (
-                      <><Target className="w-4 h-4" /> {t('squad.draw') || '平局'}</>
-                    ) : (
-                      <><Skull className="w-4 h-4" /> {t('squad.defeat') || '失败'}</>
-                    )}
-                  </div>
-                  <div className={`text-lg font-bold font-mono ${
-                    featuredBattle.profit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'
-                  }`}>
-                    {featuredBattle.profit >= 0 ? '+' : ''}{featuredBattle.profit.toLocaleString()} MON
-                  </div>
-                </div>
-
-                {/* 对手 */}
-                <div className="flex-1 flex items-center gap-4 justify-end">
-                  <div className="text-right">
-                    <p className="text-white font-semibold">{featuredBattle.battle.opponent}</p>
-                    <p className="text-xs text-white/40">{t('squad.opponent') || '对手'}</p>
-                  </div>
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white/20 bg-void-light flex items-center justify-center">
-                      {featuredBattle.opponent?.image ? (
-                        <img
-                          src={featuredBattle.opponent.image}
-                          alt={featuredBattle.opponent.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-white/40 font-bold text-lg">?</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 战斗详情 */}
-              <div className="mt-6 pt-4 border-t border-white/5 grid grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-xs text-white/40 mb-1">{t('squad.damageDealt') || '造成伤害'}</p>
-                  <p className="text-lg font-mono font-bold text-luxury-rose">{featuredBattle.battle.damageDealt.toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-white/40 mb-1">{t('squad.damageTaken') || '受到伤害'}</p>
-                  <p className="text-lg font-mono font-bold text-luxury-cyan">{featuredBattle.battle.damageTaken.toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-white/40 mb-1">{t('squad.kills') || '击杀'}</p>
-                  <p className="text-lg font-mono font-bold text-luxury-gold">{featuredBattle.battle.kills}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-white/40 mb-1">{t('squad.battleTime') || '战斗时间'}</p>
-                  <p className="text-lg font-mono font-bold text-white">
-                    {new Date(featuredBattle.battle.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 快速铸造区 */}
         <div className="card-luxury rounded-2xl overflow-hidden mb-8 border-luxury-purple/20">
