@@ -404,14 +404,14 @@ const Arena: React.FC = () => {
   const currentSelectedSlots = timerStateRef.current.selectedSlots;
 
   return (
-    <div className="min-h-screen bg-void pt-24 pb-[64px] lg:pb-32">
-      <div className="max-w-screen-xl mx-auto px-4">
+    <div className="h-screen bg-void pt-20 pb-16 flex flex-col">
+      <div className="flex-1 max-w-screen-xl mx-auto px-4 w-full flex flex-col min-h-0">
         {/* 排行榜跑马灯 - 在竞技场标题上方 */}
         <LeaderboardMarquee />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" style={{ gridAutoRows: '1fr' }}>
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
           {/* 左侧：竞技场 */}
-          <div className="lg:col-span-3 h-full">
+          <div className="lg:col-span-3 h-full min-h-0">
             {/* 战斗画面 */}
             <div className="card-luxury rounded-2xl overflow-hidden h-full flex flex-col">
               <div className="px-6 h-[72px] border-b border-white/5 flex items-center justify-between flex-shrink-0">
@@ -591,7 +591,7 @@ const Arena: React.FC = () => {
           </div>
           
           {/* 右侧：我的小队 */}
-          <div className="lg:col-span-1 h-full">
+          <div className="lg:col-span-1 h-full min-h-0">
             {/* 小队概览 - 高度与左侧对齐 */}
             <div 
               className="card-luxury rounded-2xl overflow-hidden flex flex-col w-full h-full"
