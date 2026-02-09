@@ -123,6 +123,95 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
   const rarity = rarityConfig[agent.rarity] || rarityConfig['common'];
   const RarityIcon = rarity?.icon || Sparkles;
 
+  // Compact列表视图 - 用于首页我的小队模块
+  if (compact && viewMode === 'list') {
+    return (
+      <>
+        <div 
+          className="flex items-center gap-3 px-3 py-2 bg-white/[0.03] rounded-xl border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.05] transition-all cursor-pointer group"
+          onClick={() => setIsDetailOpen(true)}
+        >
+          {/* Agent 头像 */}
+          <div className="relative flex-shrink-0">
+            <div 
+              className="w-9 h-9 rounded-lg overflow-hidden border-2"
+              style={{ borderColor: rarity.color }}
+            >
+              {agent.image ? (
+                <img 
+                  src={agent.image} 
+                  alt={agent.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-black/30 flex items-center justify-center">
+                   <PixelAgent agent={agent} size={20} />
+                </div>
+              )}
+            </div>
+            {/* 状态指示器 */}
+            <div 
+              className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-void ${status.dotColor}`}
+            />
+          </div>
+          
+          {/* 主要信息区 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="font-medium text-white text-sm truncate">{agent.name}</span>
+              <span className="text-[10px] text-white/30 font-mono">#{agent.nftId}</span>
+            </div>
+            {/* 余额和盈利 */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-semibold text-luxury-gold">
+                ${agent.balance.toLocaleString()}
+              </span>
+              <span className={`text-[10px] font-mono ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
+                {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+            {agent.status === 'idle' && (
+              <button
+                onClick={() => joinArena(agent.id)}
+                className="p-1.5 rounded-lg bg-luxury-gold/10 hover:bg-luxury-gold/20 text-luxury-gold transition-colors"
+                title="加入竞技场"
+              >
+                <Swords className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {agent.status === 'in_arena' && (
+              <button
+                onClick={() => leaveArena(agent.id)}
+                className="p-1.5 rounded-lg bg-luxury-rose/10 hover:bg-luxury-rose/20 text-luxury-rose transition-colors"
+                title="退出竞技场"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {agent.status === 'fighting' && (
+              <span className="text-[10px] text-luxury-rose">战斗中</span>
+            )}
+            {agent.status === 'dead' && (
+              <span className="text-[10px] text-gray-500">阵亡</span>
+            )}
+          </div>
+        </div>
+
+        {/* 详情弹窗 */}
+        <AgentDetailModal 
+          agent={agent} 
+          isOpen={isDetailOpen} 
+          onClose={() => setIsDetailOpen(false)} 
+        />
+      </>
+    );
+  }
+
+  // Compact卡片视图
   if (compact) {
     return (
       <>
