@@ -173,12 +173,16 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
           </div>
 
           {/* 操作按钮 */}
-          <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center relative z-10" onClick={(e) => e.stopPropagation()}>
             {/* 有余额且在idle/eliminated状态 - 显示加入竞技场按钮 */}
             {(agent.status === 'idle' || agent.status === 'eliminated') && agent.balance > 0 && (
               <button
-                onClick={() => joinArena(agent.id)}
-                className="p-1.5 rounded-lg bg-luxury-gold/10 hover:bg-luxury-gold/20 text-luxury-gold transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  joinArena(agent.id);
+                }}
+                className="p-1.5 rounded-lg bg-luxury-gold/10 hover:bg-luxury-gold/20 text-luxury-gold transition-colors relative z-20"
                 title="加入竞技场"
               >
                 <Swords className="w-3.5 h-3.5" />
@@ -187,8 +191,12 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
             {/* 有余额且在in_arena状态 - 显示退出竞技场按钮 */}
             {agent.status === 'in_arena' && agent.balance > 0 && (
               <button
-                onClick={() => leaveArena(agent.id)}
-                className="p-1.5 rounded-lg bg-luxury-rose/10 hover:bg-luxury-rose/20 text-luxury-rose transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  leaveArena(agent.id);
+                }}
+                className="p-1.5 rounded-lg bg-luxury-rose/10 hover:bg-luxury-rose/20 text-luxury-rose transition-colors relative z-20"
                 title="退出竞技场"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -198,7 +206,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
             {agent.status === 'fighting' && (
               <span className="text-[10px] text-luxury-rose">战斗中</span>
             )}
-            {/* 无余额状态 - 显示充值按钮 */}
+            {/* 无余额状态 - 显示已淘汰 */}
             {agent.balance <= 0 && (
               <span className="text-[10px] text-gray-500">已淘汰</span>
             )}
