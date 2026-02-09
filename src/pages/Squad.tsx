@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
-import AgentCard from '../components/AgentCard';
+
 import MintingModal from '../components/MintingModal';
 import ConnectButton from '../components/ConnectButton';
+import AgentDetailModal from '../components/AgentDetailModal';
 import { Agent } from '../types';
 import {
   Users,
@@ -20,7 +21,8 @@ import {
   BatteryCharging,
   Rocket,
   Lock,
-  Target
+  Target,
+  LogOut
 } from 'lucide-react';
 
 const Squad: React.FC = () => {
@@ -585,7 +587,7 @@ const Squad: React.FC = () => {
           )}
         </div>
 
-        {/* Agents 网格布局 - 优化间距和响应式 */}
+        {/* Agents 列表布局 - 全新设计 */}
         {filteredAgents.length === 0 ? (
           <div className="card-luxury rounded-2xl p-16 text-center">
             <div className="w-24 h-24 rounded-3xl bg-void-light/50 border border-white/5 flex items-center justify-center mx-auto mb-6">
@@ -599,36 +601,27 @@ const Squad: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5">
+          <div className="space-y-3">
+            {/* 表头 */}
+            <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-2 text-xs text-white/40 uppercase tracking-wider">
+              <div className="col-span-3">Agent</div>
+              <div className="col-span-2 text-center">余额 / 盈亏</div>
+              <div className="col-span-2 text-center">战绩</div>
+              <div className="col-span-2 text-center">属性</div>
+              <div className="col-span-2 text-center">状态</div>
+              <div className="col-span-1 text-right">操作</div>
+            </div>
+            
+            {/* Agent列表 */}
             {filteredAgents.map((agent, index) => (
-              <div
+              <SquadAgentRow
                 key={agent.id}
-                className={`relative transition-all duration-300 ${
-                  selectedAgents.has(agent.id) ? 'ring-2 ring-luxury-cyan rounded-2xl scale-[1.02]' : ''
-                }`}
-                style={{
-                  animationDelay: `${index * 50}ms`
-                }}
-              >
-                {/* 批量选择按钮 - 优化位置和样式 */}
-                {agent.status === 'idle' && showBatchPanel && (
-                  <button
-                    onClick={() => toggleAgentSelection(agent.id)}
-                    className={`absolute -top-2 -right-2 z-20 w-8 h-8 rounded-xl border-2 flex items-center justify-center shadow-xl transition-all duration-200 ${
-                      selectedAgents.has(agent.id)
-                        ? 'bg-luxury-cyan border-white shadow-luxury-cyan/50'
-                        : 'bg-void-panel border-white/30 hover:border-luxury-cyan hover:shadow-lg'
-                    }`}
-                  >
-                    {selectedAgents.has(agent.id) ? (
-                      <CheckSquare className="w-5 h-5 text-white" />
-                    ) : (
-                      <Square className="w-5 h-5 text-white/40" />
-                    )}
-                  </button>
-                )}
-                <AgentCard agent={agent} />
-              </div>
+                agent={agent}
+                index={index}
+                isSelected={selectedAgents.has(agent.id)}
+                showBatchPanel={showBatchPanel}
+                onToggleSelection={() => toggleAgentSelection(agent.id)}
+              />
             ))}
           </div>
         )}
@@ -641,6 +634,260 @@ const Squad: React.FC = () => {
         onClose={() => setShowMintModal(false)}
       />
     </div>
+  );
+};
+
+// SquadAgentRow 组件 - 列表行设计
+interface SquadAgentRowProps {
+  agent: Agent;
+  index: number;
+  isSelected: boolean;
+  showBatchPanel: boolean;
+  onToggleSelection: () => void;
+}
+
+const SquadAgentRow: React.FC<SquadAgentRowProps> = ({
+  agent,
+  index,
+  isSelected,
+  showBatchPanel,
+  onToggleSelection,
+}) => {
+  const { joinArena, leaveArena } = useGameStore();
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  
+  const rarityColors: Record<string, string> = {
+    common: '#9ca3af',
+    rare: '#3b82f6',
+    epic: '#a855f7',
+    legendary: '#f59e0b',
+    mythic: '#ef4444',
+  };
+  
+  const rarityColor = rarityColors[agent.rarity] || '#9ca3af';
+  
+  const statusConfig = {
+    idle: { label: '空闲', color: 'text-luxury-cyan', bg: 'bg-luxury-cyan/10', border: 'border-luxury-cyan/30' },
+    in_arena: { label: '待战', color: 'text-luxury-gold', bg: 'bg-luxury-gold/10', border: 'border-luxury-gold/30' },
+    fighting: { label: '战斗中', color: 'text-luxury-rose', bg: 'bg-luxury-rose/10', border: 'border-luxury-rose/30' },
+    dead: { label: '阵亡', color: 'text-gray-500', bg: 'bg-gray-500/10', border: 'border-gray-500/30' },
+  };
+  
+  const status = statusConfig[agent.status];
+  const winRate = agent.totalBattles > 0 ? Math.round((agent.wins / agent.totalBattles) * 100) : 0;
+  
+  return (
+    <>
+      <div
+        className={`group relative bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.12] rounded-xl transition-all duration-200 cursor-pointer ${
+          isSelected ? 'ring-2 ring-luxury-cyan border-luxury-cyan/50' : ''
+        }`}
+        style={{ animationDelay: `${index * 30}ms` }}
+        onClick={() => setIsDetailOpen(true)}
+      >
+        <div className="p-3 lg:py-3 lg:px-4">
+          {/* 移动端布局 */}
+          <div className="lg:hidden">
+            <div className="flex items-center gap-3">
+              {/* 选择框 */}
+              {showBatchPanel && agent.status === 'idle' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleSelection(); }}
+                  className={`flex-shrink-0 w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? 'bg-luxury-cyan border-luxury-cyan'
+                      : 'border-white/20 hover:border-luxury-cyan'
+                  }`}
+                >
+                  {isSelected && <CheckSquare className="w-4 h-4 text-white" />}
+                </button>
+              )}
+              
+              {/* 头像 */}
+              <div 
+                className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
+                style={{ border: `2px solid ${rarityColor}` }}
+              >
+                {agent.image ? (
+                  <img src={agent.image} alt={agent.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-void-light flex items-center justify-center">
+                    <span className="text-lg">🤖</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* 主要信息 */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-white truncate">{agent.name}</h4>
+                  <span className="text-xs text-white/30">#{agent.nftId}</span>
+                </div>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-sm font-mono font-bold text-luxury-gold">${agent.balance.toLocaleString()}</span>
+                  <span className={`text-xs ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
+                    {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit}
+                  </span>
+                </div>
+              </div>
+              
+              {/* 操作按钮 */}
+              <div onClick={(e) => e.stopPropagation()}>
+                {agent.status === 'idle' && (
+                  <button
+                    onClick={() => joinArena(agent.id)}
+                    className="p-2 rounded-lg bg-luxury-gold/10 hover:bg-luxury-gold/20 text-luxury-gold transition-colors"
+                  >
+                    <Swords className="w-4 h-4" />
+                  </button>
+                )}
+                {agent.status === 'in_arena' && (
+                  <button
+                    onClick={() => leaveArena(agent.id)}
+                    className="p-2 rounded-lg bg-luxury-rose/10 hover:bg-luxury-rose/20 text-luxury-rose transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* 额外信息 */}
+            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-white/5">
+              <div className="flex items-center gap-1 text-xs">
+                <Target className="w-3 h-3 text-white/40" />
+                <span className={winRate >= 60 ? 'text-luxury-green' : winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'}>
+                  {winRate}%
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-white/40">
+                <Swords className="w-3 h-3" />
+                <span>{agent.totalBattles}场</span>
+              </div>
+              <div className={`text-xs px-2 py-0.5 rounded ${status.bg} ${status.color}`}>
+                {status.label}
+              </div>
+            </div>
+          </div>
+          
+          {/* 桌面端布局 - 12列网格 */}
+          <div className="hidden lg:grid grid-cols-12 gap-4 items-center">
+            {/* 选择框 + Agent信息 */}
+            <div className="col-span-3 flex items-center gap-3">
+              {showBatchPanel && agent.status === 'idle' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleSelection(); }}
+                  className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? 'bg-luxury-cyan border-luxury-cyan'
+                      : 'border-white/20 hover:border-luxury-cyan'
+                  }`}
+                >
+                  {isSelected && <CheckSquare className="w-3.5 h-3.5 text-white" />}
+                </button>
+              )}
+              
+              <div 
+                className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
+                style={{ border: `2px solid ${rarityColor}` }}
+              >
+                {agent.image ? (
+                  <img src={agent.image} alt={agent.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-void-light flex items-center justify-center">
+                    <span>🤖</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="min-w-0">
+                <h4 className="font-semibold text-white truncate">{agent.name}</h4>
+                <span className="text-xs text-white/30">#{agent.nftId}</span>
+              </div>
+            </div>
+            
+            {/* 余额 / 盈亏 */}
+            <div className="col-span-2 text-center">
+              <div className="text-sm font-mono font-bold text-luxury-gold">${agent.balance.toLocaleString()}</div>
+              <div className={`text-xs ${agent.netProfit >= 0 ? 'text-luxury-green' : 'text-luxury-rose'}`}>
+                {agent.netProfit >= 0 ? '+' : ''}{agent.netProfit.toLocaleString()}
+              </div>
+            </div>
+            
+            {/* 战绩 */}
+            <div className="col-span-2 text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Target className="w-3.5 h-3.5 text-white/40" />
+                <span className={`text-sm font-mono font-semibold ${
+                  winRate >= 60 ? 'text-luxury-green' : winRate >= 40 ? 'text-luxury-amber' : 'text-luxury-rose'
+                }`}>
+                  {winRate}%
+                </span>
+              </div>
+              <div className="text-xs text-white/40">{agent.totalBattles}场 / {agent.tournamentWins}冠</div>
+            </div>
+            
+            {/* 属性 */}
+            <div className="col-span-2 text-center">
+              <div className="flex items-center justify-center gap-2 text-xs">
+                <span className="text-luxury-rose">{agent.attack}</span>
+                <span className="text-white/20">/</span>
+                <span className="text-luxury-cyan">{agent.defense}</span>
+                <span className="text-white/20">/</span>
+                <span className="text-luxury-green">{agent.speed}</span>
+              </div>
+              <div className="text-[10px] text-white/30 mt-0.5">攻/防/速</div>
+            </div>
+            
+            {/* 状态 */}
+            <div className="col-span-2 text-center">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs ${status.bg} ${status.color} ${status.border} border`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${agent.status === 'fighting' ? 'animate-pulse' : ''} ${
+                  agent.status === 'idle' ? 'bg-luxury-cyan' :
+                  agent.status === 'in_arena' ? 'bg-luxury-gold' :
+                  agent.status === 'fighting' ? 'bg-luxury-rose' : 'bg-gray-500'
+                }`} />
+                {status.label}
+              </span>
+            </div>
+            
+            {/* 操作 */}
+            <div className="col-span-1 text-right" onClick={(e) => e.stopPropagation()}>
+              {agent.status === 'idle' && (
+                <button
+                  onClick={() => joinArena(agent.id)}
+                  className="p-2 rounded-lg bg-luxury-gold/10 hover:bg-luxury-gold/20 text-luxury-gold transition-colors"
+                  title="加入竞技场"
+                >
+                  <Swords className="w-4 h-4" />
+                </button>
+              )}
+              {agent.status === 'in_arena' && (
+                <button
+                  onClick={() => leaveArena(agent.id)}
+                  className="p-2 rounded-lg bg-luxury-rose/10 hover:bg-luxury-rose/20 text-luxury-rose transition-colors"
+                  title="退出竞技场"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
+              {agent.status === 'fighting' && (
+                <span className="text-xs text-luxury-rose">战斗中</span>
+              )}
+              {agent.status === 'dead' && (
+                <span className="text-xs text-gray-500">阵亡</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <AgentDetailModal
+        agent={agent}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+      />
+    </>
   );
 };
 
