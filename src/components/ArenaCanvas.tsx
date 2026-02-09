@@ -222,7 +222,7 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             type: 'attack',
             attacker: latestAttacker,
             defender: latestTarget,
-            message: `${latestAttacker.name} 掠夺了 ${latestTarget.name} ${lootAmount} $MON`,
+            message: `${latestAttacker.name} 掠夺了 ${latestTarget.name} +${lootAmount} $MON`,
           });
         }
       }, 200);

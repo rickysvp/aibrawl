@@ -160,10 +160,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
             <div className="flex items-center gap-1.5 mb-0.5">
               <span className="font-medium text-white text-sm truncate">{agent.name}</span>
               <span className="text-[10px] text-white/30 font-mono">#{agent.nftId}</span>
-              {/* 状态标签 */}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded ${status.bgColor} ${status.color} ${status.borderColor} border`}>
-                {status.label}
-              </span>
             </div>
             {/* 余额和盈利 */}
             <div className="flex items-center gap-2">
