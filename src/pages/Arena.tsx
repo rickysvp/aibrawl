@@ -409,9 +409,9 @@ const Arena: React.FC = () => {
         {/* 排行榜跑马灯 - 在竞技场标题上方 */}
         <LeaderboardMarquee />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:items-start">
           {/* 左侧：竞技场 */}
-          <div className="lg:col-span-3 space-y-6 relative flex flex-col">
+          <div className="lg:col-span-3">
             {/* 战斗画面 */}
             <div className="card-luxury rounded-2xl overflow-hidden">
               <div className="px-6 h-[72px] border-b border-white/5 flex items-center justify-between">
@@ -591,13 +591,11 @@ const Arena: React.FC = () => {
           </div>
           
           {/* 右侧：我的小队 */}
-          <div className="lg:col-span-1 h-full flex flex-col">
-            {/* 小队概览 - 高度与左侧竞技场对齐 */}
+          <div className="lg:col-span-1" style={{ maxHeight: '600px' }}>
+            {/* 小队概览 - 固定高度600px */}
             <div 
-              className="card-luxury rounded-2xl overflow-hidden flex flex-col w-full flex-1"
-              style={{ 
-                minHeight: '400px', // 移动端给个最小高度
-              }}
+              className="card-luxury rounded-2xl overflow-hidden flex flex-col w-full"
+              style={{ height: '600px' }}
             >
               {/* 标题栏 + 铸造按钮 */}
               <div className="px-6 h-[72px] border-b border-white/5 flex items-center justify-between flex-shrink-0">
