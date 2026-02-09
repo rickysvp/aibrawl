@@ -311,13 +311,14 @@ export const useGameStore = create<GameStore>()(
   
   withdrawFunds: (agentId: string, amount: number) => {
     const agent = get().myAgents.find(a => a.id === agentId);
-    if (!agent || agent.balance < amount || agent.status !== 'idle') return;
+    // 只有不在战斗中才能提现
+    if (!agent || agent.balance < amount || agent.status === 'fighting') return;
     
     set((state) => ({
       wallet: { 
         ...state.wallet, 
         balance: state.wallet.balance + amount,
-        lockedBalance: state.wallet.lockedBalance - amount,
+        lockedBalance: Math.max(0, state.wallet.lockedBalance - amount),
       },
       myAgents: state.myAgents.map(a => 
         a.id === agentId ? { ...a, balance: a.balance - amount } : a

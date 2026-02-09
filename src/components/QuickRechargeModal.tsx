@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
-import { Wallet, X, Plus, Minus } from 'lucide-react';
+import { Wallet, X, Plus, Minus, Swords } from 'lucide-react';
 
 interface QuickRechargeModalProps {
   agentId: string;
   agentName: string;
   isOpen: boolean;
   onClose: () => void;
+  agentStatus?: string;
 }
 
 const QuickRechargeModal: React.FC<QuickRechargeModalProps> = ({
@@ -15,11 +16,13 @@ const QuickRechargeModal: React.FC<QuickRechargeModalProps> = ({
   agentName,
   isOpen,
   onClose,
+  agentStatus = 'idle',
 }) => {
   const { t } = useTranslation();
-  const { wallet, allocateFunds } = useGameStore();
+  const { wallet, allocateFunds, joinArena } = useGameStore();
   const [amount, setAmount] = useState(100);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showJoinOption, setShowJoinOption] = useState(false);
 
   if (!isOpen) return null;
 
@@ -38,11 +41,57 @@ const QuickRechargeModal: React.FC<QuickRechargeModalProps> = ({
     allocateFunds(agentId, amount);
     
     setIsProcessing(false);
+    
+    // 如果Agent是idle状态，显示加入竞技场选项
+    if (agentStatus === 'idle') {
+      setShowJoinOption(true);
+    } else {
+      onClose();
+      alert(`${t('wallet.rechargeSuccess')} ${amount} $MON`);
+    }
+  };
+
+  const handleJoinArena = () => {
+    joinArena(agentId);
     onClose();
-    alert(`${t('wallet.rechargeSuccess')} ${amount} $MON`);
+    alert(`${agentName} 已加入竞技场！`);
   };
 
   const quickAmounts = [50, 100, 200, 500, 1000];
+
+  // 如果显示加入竞技场选项，渲染不同的UI
+  if (showJoinOption) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <div className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-luxury-green/10 flex items-center justify-center">
+            <Wallet className="w-8 h-8 text-luxury-green" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">充值成功！</h3>
+          <p className="text-white/60 mb-6">{agentName} 已充值 {amount} $MON</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleJoinArena}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-luxury-gold to-luxury-amber text-white font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <Swords className="w-5 h-5" />
+              立即加入竞技场
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full py-3 rounded-xl bg-white/5 text-white/60 hover:bg-white/10 transition-all"
+            >
+              稍后再说
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

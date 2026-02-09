@@ -939,6 +939,7 @@ const SquadAgentRow: React.FC<SquadAgentRowProps> = ({
         agentName={agent.name}
         isOpen={isRechargeOpen}
         onClose={() => setIsRechargeOpen(false)}
+        agentStatus={agent.status}
       />
     </>
   );

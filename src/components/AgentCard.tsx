@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Agent, Rarity } from '../types';
 import PixelAgent from './PixelAgent';
 import AgentDetailModal from './AgentDetailModal';
+import QuickRechargeModal from './QuickRechargeModal';
 import { useGameStore } from '../store/gameStore';
 import { 
   Zap, 
@@ -72,6 +73,7 @@ const rarityConfig: Record<Rarity, { name: string; color: string; bgColor: strin
 const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode = 'card' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isRechargeOpen, setIsRechargeOpen] = useState(false);
   const { joinArena, leaveArena } = useGameStore();
   
   const getStatusConfig = () => {
@@ -213,7 +215,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.location.href = '/recharge';
+                  setIsRechargeOpen(true);
                 }}
                 className="p-1.5 rounded-lg bg-luxury-cyan/10 hover:bg-luxury-cyan/20 text-luxury-cyan transition-colors relative z-20"
                 title="充值"
@@ -229,6 +231,15 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, compact = false, viewMode 
           agent={agent} 
           isOpen={isDetailOpen} 
           onClose={() => setIsDetailOpen(false)} 
+        />
+        
+        {/* 快速充值弹窗 */}
+        <QuickRechargeModal
+          agentId={agent.id}
+          agentName={agent.name}
+          isOpen={isRechargeOpen}
+          onClose={() => setIsRechargeOpen(false)}
+          agentStatus={agent.status}
         />
       </>
     );
