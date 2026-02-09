@@ -78,6 +78,7 @@ const Arena: React.FC = () => {
     myAgents,
     systemAgents,
     wallet,
+    myBattleLogs,
     initializeArena,
     setArenaPhase,
     addBattleLog,
@@ -440,9 +441,10 @@ const Arena: React.FC = () => {
                   selectedSlots={currentSelectedSlots}
                 />
 
-                {/* 悬浮战斗日志 - 仅显示 arena 日志 */}
+                {/* 悬浮战斗日志 - 可切换竞技场日志和我的小队日志 */}
                 <BattleLog
-                  logs={arena.battleLogs}
+                  arenaLogs={arena.battleLogs}
+                  myLogs={myBattleLogs}
                   isOverlay={true}
                 />
 
