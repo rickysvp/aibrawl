@@ -1621,8 +1621,11 @@ export const useGameStore = create<GameStore>()(
 
       // 计算伤害
       const isCrit = Math.random() > 0.8;
-      const baseDamage = attacker.attack - target.defense + Math.floor(Math.random() * 10);
-      const damage = Math.max(1, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
+      // 基础伤害 = (攻击力 - 防御力) * 倍率 + 随机值
+      // 倍率设置为5，让掠夺金额更合理（原来只有1倍，导致伤害只有1-15）
+      const damageMultiplier = 5;
+      const baseDamage = (attacker.attack - target.defense) * damageMultiplier + Math.floor(Math.random() * 50);
+      const damage = Math.max(10, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
 
       // 掠夺资金（不能超过目标的余额）
       const lootAmount = Math.min(damage, target.balance);

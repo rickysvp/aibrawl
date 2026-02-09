@@ -141,7 +141,10 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         if (!latestAttacker || !latestTarget) return;
         
         const isCrit = Math.random() > 0.8;
-        let baseDamage = latestAttacker.attack - latestTarget.defense + Math.floor(Math.random() * 10);
+        // 基础伤害 = (攻击力 - 防御力) * 倍率 + 随机值
+        // 倍率设置为5，让掠夺金额更合理（原来只有1倍，导致伤害只有1-15）
+        const damageMultiplier = 5;
+        let baseDamage = (latestAttacker.attack - latestTarget.defense) * damageMultiplier + Math.floor(Math.random() * 50);
         
         // 检查目标是否防御中
         const isDefending = defendingAgents.has(target.id);
@@ -149,7 +152,7 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           baseDamage = Math.floor(baseDamage * 0.5); // 防御减少 50% 伤害
         }
 
-        const damage = Math.max(1, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
+        const damage = Math.max(10, isCrit ? Math.floor(baseDamage * 1.5) : baseDamage);
 
         // 计算掠夺资金 (实际从目标身上拿走的金额，不能超过目标余额)
         const lootAmount = Math.min(damage, latestTarget.balance);
