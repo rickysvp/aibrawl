@@ -509,6 +509,7 @@ export const useGameStore = create<GameStore>()(
         participants: [],
         selectedSlots: [],
         top3: [],
+        battleLogs: [], // 清空战斗日志，只保留当前场次
       }
     }));
   },
