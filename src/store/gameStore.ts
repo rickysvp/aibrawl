@@ -827,10 +827,11 @@ export const useGameStore = create<GameStore>()(
 
       useNotificationStore.getState().addNotification('success', `Staked ${amount} MON successfully`, 'Liquidity Staked');
       return { success: true, message: 'Staked successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Stake] Failed:', error);
-      useNotificationStore.getState().addNotification('error', 'Failed to stake liquidity', 'Error');
-      return { success: false, message: 'Failed to stake liquidity' };
+      const errorMessage = error?.message || error?.error?.message || 'Unknown error';
+      useNotificationStore.getState().addNotification('error', `Failed to stake: ${errorMessage}`, 'Error');
+      return { success: false, message: `Failed to stake: ${errorMessage}` };
     }
   },
 

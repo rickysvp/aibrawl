@@ -319,13 +319,18 @@ export const LiquidityService = {
 
   // 创建质押记录
   async createStake(stake: Partial<DatabaseLiquidityStake>): Promise<DatabaseLiquidityStake> {
+    console.log('[LiquidityService] Creating stake:', stake);
     const { data, error } = await supabase
       .from(TABLES.LIQUIDITY_STAKES)
       .insert(stake)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[LiquidityService] Create stake error:', error);
+      throw error;
+    }
+    console.log('[LiquidityService] Stake created:', data);
     return data;
   },
 
