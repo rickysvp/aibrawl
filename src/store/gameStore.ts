@@ -768,12 +768,10 @@ export const useGameStore = create<GameStore>()(
     }
 
     const now = Date.now();
-    const stakeId = Math.random().toString(36).substr(2, 9);
     
     try {
-      // 先保存到Supabase
+      // 先保存到Supabase（不指定id，让数据库自动生成uuid）
       const dbStake = await LiquidityService.createStake({
-        id: stakeId,
         user_id: wallet.userId || wallet.address,
         user_address: wallet.address,
         amount: amount,
