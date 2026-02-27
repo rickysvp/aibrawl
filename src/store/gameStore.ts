@@ -216,7 +216,9 @@ export const useGameStore = create<GameStore>()(
 
           // 加载用户的流动性质押
           try {
+            console.log(`[Wallet] Loading liquidity stakes for address: ${randomAddress}`);
             const userStakes = await LiquidityService.getUserActiveStakes(randomAddress);
+            console.log(`[Wallet] Found ${userStakes.length} liquidity stakes`);
             if (userStakes.length > 0) {
               const frontendStakes: LiquidityStake[] = userStakes.map(dbStake => ({
                 id: dbStake.id,
@@ -235,6 +237,8 @@ export const useGameStore = create<GameStore>()(
                 userStakes: frontendStakes,
               });
               console.log(`[Wallet] Loaded ${userStakes.length} liquidity stakes for user ${nickname}`);
+            } else {
+              console.log(`[Wallet] No liquidity stakes found for user ${nickname}`);
             }
           } catch (stakeError) {
             console.error('[Wallet] Failed to load liquidity stakes:', stakeError);
@@ -769,6 +773,7 @@ export const useGameStore = create<GameStore>()(
     const now = Date.now();
     
     try {
+      console.log(`[Stake] Creating stake for address: ${wallet.address}, amount: ${amount}`);
       // 先保存到Supabase（不指定id，让数据库自动生成uuid）
       const dbStake = await LiquidityService.createStake({
         user_id: wallet.userId || wallet.address,
@@ -780,6 +785,7 @@ export const useGameStore = create<GameStore>()(
         total_fee_earnings: 0,
         status: 'active',
       });
+      console.log(`[Stake] Stake created successfully: ${dbStake.id}`);
 
       // 创建交易记录
       await TransactionService.createTransaction({
