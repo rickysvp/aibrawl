@@ -9,6 +9,14 @@ import {
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
 import { useNotificationStore } from './notificationStore';
 import { AgentService, UserService, TransactionService, DataTransformers, LiquidityService } from '../services/database';
+import { supabase } from '../lib/supabase';
+
+// 系统账号常量 - 用于铸造系统Agents
+export const SYSTEM_ACCOUNT = {
+  address: '0xSYSTEM000000000000000000000000000000000000',
+  username: 'System',
+  avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=system',
+};
 
 interface GameStore {
   // 钱包状态
@@ -445,35 +453,58 @@ export const useGameStore = create<GameStore>()(
   
   initializeArena: async () => {
     const state = get();
+    const SYSTEM_AGENT_COUNT = 500; // 系统Agents数量
     
-    // 尝试从Supabase加载系统Agents
+    // 尝试从Supabase加载系统Agents（属于系统账号的Agents）
     try {
       console.log('[Arena] 从Supabase加载系统Agents...');
-      const dbAgents = await AgentService.getSystemAgents(1000);
       
-      if (dbAgents.length > 0) {
+      // 先确保系统账号存在
+      const systemUser = await UserService.getUserByAddress(SYSTEM_ACCOUNT.address).catch(() => null);
+      if (!systemUser) {
+        console.log('[Arena] 创建系统账号...');
+        await UserService.createUser({
+          wallet_address: SYSTEM_ACCOUNT.address,
+          username: SYSTEM_ACCOUNT.username,
+          avatar: SYSTEM_ACCOUNT.avatar,
+          balance: 0,
+        });
+      }
+      
+      // 获取系统账号的Agents
+      const { data: systemAgentsData, error } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('owner_id', SYSTEM_ACCOUNT.address)
+        .eq('is_player', false);
+      
+      if (error) throw error;
+      
+      if (systemAgentsData && systemAgentsData.length >= SYSTEM_AGENT_COUNT) {
         // 从数据库加载
-        const systemAgents = dbAgents.map(DataTransformers.toFrontendAgent).map(a => 
+        const systemAgents = systemAgentsData.map(DataTransformers.toFrontendAgent).map(a => 
           a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
         );
         set({ systemAgents });
         console.log(`[Arena] 从Supabase加载 ${systemAgents.length} 个系统Agents`);
       } else {
-        // 数据库为空，生成并保存
-        console.log('[Arena] Supabase为空，生成系统Agents...');
-        const systemAgents = generateSystemAgents(1000).map(agent => ({
+        // 数据库中系统Agents不足，生成并保存
+        const neededCount = SYSTEM_AGENT_COUNT - (systemAgentsData?.length || 0);
+        console.log(`[Arena] 需要生成 ${neededCount} 个系统Agents...`);
+        
+        const newSystemAgents = generateSystemAgents(neededCount).map(agent => ({
           ...agent,
           status: 'in_arena' as const,
           balance: 10000,
         }));
         
-        // 分批保存到Supabase，每批100个，避免资源不足
-        const batchSize = 100;
-        for (let i = 0; i < systemAgents.length; i += batchSize) {
-          const batch = systemAgents.slice(i, i + batchSize);
+        // 分批保存到Supabase
+        const batchSize = 50;
+        for (let i = 0; i < newSystemAgents.length; i += batchSize) {
+          const batch = newSystemAgents.slice(i, i + batchSize);
           const savePromises = batch.map(agent => 
             AgentService.createAgent({
-              ...DataTransformers.toDatabaseAgent(agent, 'system'),
+              ...DataTransformers.toDatabaseAgent(agent, SYSTEM_ACCOUNT.address),
               is_player: false,
             }).catch(err => {
               console.error('[Arena] 保存Agent失败:', err);
@@ -481,25 +512,28 @@ export const useGameStore = create<GameStore>()(
             })
           );
           await Promise.allSettled(savePromises);
-          console.log(`[Arena] 已保存 ${Math.min(i + batchSize, systemAgents.length)}/${systemAgents.length} 个Agents`);
-          // 添加小延迟，避免 overwhelming Supabase
-          if (i + batchSize < systemAgents.length) {
+          console.log(`[Arena] 已保存 ${Math.min(i + batchSize, newSystemAgents.length)}/${newSystemAgents.length} 个系统Agents`);
+          if (i + batchSize < newSystemAgents.length) {
             await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
-        set({ systemAgents });
-        console.log('[Arena] 1000个系统Agents已生成并保存到Supabase');
+        
+        // 合并已有的和新生成的Agents
+        const existingAgents = (systemAgentsData || []).map(DataTransformers.toFrontendAgent);
+        const allSystemAgents = [...existingAgents, ...newSystemAgents];
+        set({ systemAgents: allSystemAgents });
+        console.log(`[Arena] 系统Agents总数: ${allSystemAgents.length}`);
       }
     } catch (error) {
       console.error('[Arena] 从Supabase加载失败，降级到本地生成:', error);
       // 降级到本地生成
-      const systemAgents = generateSystemAgents(1000).map(agent => ({
+      const systemAgents = generateSystemAgents(SYSTEM_AGENT_COUNT).map(agent => ({
         ...agent,
         status: 'in_arena' as const,
         balance: 10000,
       }));
       set({ systemAgents });
-      console.log('[Arena] 1000个系统Agents已生成（本地模式）');
+      console.log(`[Arena] ${SYSTEM_AGENT_COUNT}个系统Agents已生成（本地模式）`);
     }
     
     // 重置 fighting 状态的 Agent

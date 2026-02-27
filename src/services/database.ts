@@ -178,6 +178,34 @@ export const UserService = {
     if (error && error.code !== 'PGRST116') throw error;
     return data;
   },
+
+  // 通过地址获取用户
+  async getUserByAddress(address: string): Promise<DatabaseUser | null> {
+    const { data, error } = await supabase
+      .from(TABLES.USERS)
+      .select('*')
+      .eq('address', address)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  },
+
+  // 创建用户
+  async createUser(userData: Partial<DatabaseUser>): Promise<DatabaseUser> {
+    const { data, error } = await supabase
+      .from(TABLES.USERS)
+      .insert({
+        ...userData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
 };
 
 // ==================== Battle 服务 ====================
