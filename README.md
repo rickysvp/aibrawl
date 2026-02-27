@@ -6,8 +6,7 @@
 
 | 平台 | 地址 | 状态 |
 |------|------|------|
-| 🚀 Vercel | [aibattle.vercel.app](https://aibattle.vercel.app) | ✅ 已部署 |
-| 💜 Lovable | [aibattle.lovable.app](https://aibattle.lovable.app) | ✅ 已部署 |
+| 🌐 线上环境 | [AIbrawl.fun](https://AIbrawl.fun) | ✅ 已部署 |
 | 🖥️ 本地开发 | http://localhost:5173 | 开发中 |
 
 ## 📋 版本信息
