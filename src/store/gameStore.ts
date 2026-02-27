@@ -9,7 +9,6 @@ import {
 import { generateRandomAgent, generateSystemAgents, TOURNAMENT_SYSTEM_AGENTS } from '../utils/agentGenerator';
 import { useNotificationStore } from './notificationStore';
 import { AgentService, UserService, TransactionService, DataTransformers, LiquidityService } from '../services/database';
-import { supabase } from '../lib/supabase';
 
 interface GameStore {
   // 钱包状态
@@ -232,9 +231,9 @@ export const useGameStore = create<GameStore>()(
                 earnings: [],
               }));
               
-              set((state) => ({
+              set({
                 userStakes: frontendStakes,
-              }));
+              });
               console.log(`[Wallet] Loaded ${userStakes.length} liquidity stakes for user ${nickname}`);
             }
           } catch (stakeError) {

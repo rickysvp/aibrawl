@@ -148,7 +148,6 @@ export interface TournamentMatch {
   winnerId?: string;
   startTime?: number;
   endTime?: number;
-  bets?: PredictionBet[];
 }
 
 // 锦标赛类型
