@@ -336,15 +336,23 @@ export const LiquidityService = {
 
   // 获取用户的活跃质押
   async getUserActiveStakes(userAddress: string): Promise<DatabaseLiquidityStake[]> {
-    const { data, error } = await supabase
-      .from(TABLES.LIQUIDITY_STAKES)
-      .select('*')
-      .eq('user_address', userAddress)
-      .eq('status', 'active')
-      .order('staked_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.LIQUIDITY_STAKES)
+        .select('*')
+        .eq('user_address', userAddress)
+        .eq('status', 'active')
+        .order('staked_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+      if (error) {
+        console.error('[LiquidityService] getUserActiveStakes error:', error);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error('[LiquidityService] getUserActiveStakes exception:', err);
+      return [];
+    }
   },
 
   // 获取用户的所有质押（包括已解押）
