@@ -20,10 +20,31 @@ const App: React.FC = () => {
     if (initialized.current) return;
     initialized.current = true;
 
-    const { startTournamentScheduler, startAutoBattleSystem, initializeArena } = useGameStore.getState();
-    initializeArena(); // 初始化1000个系统agents
-    startTournamentScheduler();
-    startAutoBattleSystem(); // 启动后台自动战斗系统
+    const init = async () => {
+      const { 
+        startTournamentScheduler, 
+        startAutoBattleSystem, 
+        initializeArena,
+        wallet,
+        connectWallet
+      } = useGameStore.getState();
+      
+      // 初始化1000个系统agents
+      await initializeArena();
+      
+      // 如果用户已登录（从localStorage恢复的钱包状态），重新加载用户数据
+      if (wallet.connected && wallet.address) {
+        console.log('[App] 检测到已登录用户，重新加载数据...');
+        // 使用已保存的地址重新连接，加载用户数据
+        const savedNickname = localStorage.getItem('aibrawl_nickname') || 'User';
+        await connectWallet(savedNickname, 'wallet');
+      }
+      
+      startTournamentScheduler();
+      startAutoBattleSystem(); // 启动后台自动战斗系统
+    };
+    
+    init();
 
     return () => {
       const { stopAutoBattleSystem } = useGameStore.getState();

@@ -126,6 +126,9 @@ export const useGameStore = create<GameStore>()(
       ).join('');
       localStorage.setItem('mock_wallet_address', storedAddress);
     }
+    
+    // 保存用户昵称，用于刷新后恢复登录
+    localStorage.setItem('aibrawl_nickname', nickname);
 
     const randomAddress = storedAddress;
 
@@ -453,7 +456,7 @@ export const useGameStore = create<GameStore>()(
   
   initializeArena: async () => {
     const state = get();
-    const SYSTEM_AGENT_COUNT = 500; // 系统Agents数量
+    const SYSTEM_AGENT_COUNT = 1000; // 系统Agents数量
     
     // 尝试从Supabase加载系统Agents（属于系统账号的Agents）
     try {
@@ -525,15 +528,11 @@ export const useGameStore = create<GameStore>()(
         console.log(`[Arena] 系统Agents总数: ${allSystemAgents.length}`);
       }
     } catch (error) {
-      console.error('[Arena] 从Supabase加载失败，降级到本地生成:', error);
-      // 降级到本地生成
-      const systemAgents = generateSystemAgents(SYSTEM_AGENT_COUNT).map(agent => ({
-        ...agent,
-        status: 'in_arena' as const,
-        balance: 10000,
-      }));
-      set({ systemAgents });
-      console.log(`[Arena] ${SYSTEM_AGENT_COUNT}个系统Agents已生成（本地模式）`);
+      console.error('[Arena] 从Supabase加载失败:', error);
+      // 不降级到本地生成，而是设置空数组，等待下次重试
+      // 这样可以确保数据一致性，所有数据必须来自Supabase
+      set({ systemAgents: [] });
+      console.error('[Arena] 无法从Supabase加载系统Agents，请检查数据库连接和表结构');
     }
     
     // 重置 fighting 状态的 Agent
@@ -1824,11 +1823,8 @@ export const useGameStore = create<GameStore>()(
   name: 'aibrawl-storage',
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({
+    // 只保留钱包连接状态，其他所有数据都从Supabase加载
     wallet: state.wallet,
-    myAgents: state.myAgents,
-    userStakes: state.userStakes,
-    // 注意：systemAgents不再持久化到localStorage，改为从Supabase加载
-    // 避免localStorage超出配额
   }),
   onRehydrateStorage: () => (state) => {
     if (!state) return;
