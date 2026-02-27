@@ -446,30 +446,60 @@ export const useGameStore = create<GameStore>()(
   initializeArena: async () => {
     const state = get();
     
-    // 如果已经有系统Agents（从localStorage恢复），直接使用
-    if (state.systemAgents.length > 0) {
-      console.log(`[Arena] 从本地存储恢复 ${state.systemAgents.length} 个系统Agents`);
+    // 尝试从Supabase加载系统Agents
+    try {
+      console.log('[Arena] 从Supabase加载系统Agents...');
+      const dbAgents = await AgentService.getSystemAgents(1000);
       
-      // 重置所有 fighting 状态的 Agent 为 in_arena
-      set({
-        systemAgents: state.systemAgents.map(a => 
+      if (dbAgents.length > 0) {
+        // 从数据库加载
+        const systemAgents = dbAgents.map(DataTransformers.toFrontendAgent).map(a => 
           a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
-        ),
-        myAgents: state.myAgents.map(a => 
-          a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
-        ),
-      });
-    } else {
-      // 首次加载，生成系统Agents
-      console.log('[Arena] 首次加载，生成系统Agents...');
+        );
+        set({ systemAgents });
+        console.log(`[Arena] 从Supabase加载 ${systemAgents.length} 个系统Agents`);
+      } else {
+        // 数据库为空，生成并保存
+        console.log('[Arena] Supabase为空，生成系统Agents...');
+        const systemAgents = generateSystemAgents(1000).map(agent => ({
+          ...agent,
+          status: 'in_arena' as const,
+          balance: 10000,
+        }));
+        
+        // 批量保存到Supabase（使用Promise.allSettled避免单个失败影响整体）
+        const savePromises = systemAgents.map(agent => 
+          AgentService.createAgent({
+            ...DataTransformers.toDatabaseAgent(agent, 'system'),
+            is_player: false,
+          }).catch(err => {
+            console.error('[Arena] 保存Agent失败:', err);
+            return null;
+          })
+        );
+        
+        await Promise.allSettled(savePromises);
+        set({ systemAgents });
+        console.log('[Arena] 1000个系统Agents已生成并保存到Supabase');
+      }
+    } catch (error) {
+      console.error('[Arena] 从Supabase加载失败，降级到本地生成:', error);
+      // 降级到本地生成
       const systemAgents = generateSystemAgents(1000).map(agent => ({
         ...agent,
         status: 'in_arena' as const,
         balance: 10000,
       }));
       set({ systemAgents });
-      console.log('[Arena] 1000个系统Agents已生成');
+      console.log('[Arena] 1000个系统Agents已生成（本地模式）');
     }
+    
+    // 重置 fighting 状态的 Agent
+    set({
+      myAgents: state.myAgents.map(a => 
+        a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
+      ),
+    });
     
     // 启动后台自动战斗系统
     if (!state.autoBattleInterval) {
@@ -1753,12 +1783,8 @@ export const useGameStore = create<GameStore>()(
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({
     wallet: state.wallet,
-    myAgents: state.myAgents,
-    userStakes: state.userStakes,
-    systemAgents: state.systemAgents,
-    totalSystemRounds: state.totalSystemRounds,
-    liquidityPool: state.liquidityPool,
-    platformRevenue: state.platformRevenue,
+    // 注意：systemAgents不再持久化到localStorage，改为从Supabase加载
+    // 避免localStorage超出配额
   }),
   onRehydrateStorage: () => (state) => {
     if (!state) return;
