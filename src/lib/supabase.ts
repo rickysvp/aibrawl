@@ -4,33 +4,13 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// 检查配置是否完整
-const isSupabaseConfigured = supabaseUrl && supabaseAnonKey;
-
-// 创建 Supabase 客户端（如果未配置则创建mock客户端）
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-      },
-    })
-  : {
-      from: () => ({
-        select: () => ({ data: null, error: new Error('Supabase not configured') }),
-        insert: () => ({ data: null, error: new Error('Supabase not configured') }),
-        update: () => ({ data: null, error: new Error('Supabase not configured') }),
-        upsert: () => ({ data: null, error: new Error('Supabase not configured') }),
-        delete: () => ({ data: null, error: new Error('Supabase not configured') }),
-        eq: () => ({ data: null, error: new Error('Supabase not configured') }),
-        single: () => ({ data: null, error: new Error('Supabase not configured') }),
-        order: () => ({ data: [], error: null }),
-        limit: () => ({ data: [], error: null }),
-      }),
-      channel: () => ({
-        on: () => ({ subscribe: () => {} }),
-      }),
-    } as any;
+// 创建 Supabase 客户端
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+  },
+});
 
 // 数据库表名常量
 export const TABLES = {
