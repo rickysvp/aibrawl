@@ -2,13 +2,26 @@
 -- AI Brawl 完整数据库初始化脚本
 -- ============================================
 
+-- 删除已存在的表（重新创建）
+DROP TABLE IF EXISTS battle_logs CASCADE;
+DROP TABLE IF EXISTS battles CASCADE;
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS agents CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS liquidity_stakes CASCADE;
+DROP TABLE IF EXISTS liquidity_pool CASCADE;
+DROP TABLE IF EXISTS round_stats CASCADE;
+DROP TABLE IF EXISTS platform_revenue CASCADE;
+
 -- 1. 用户表 (users)
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  address TEXT UNIQUE NOT NULL,
+  wallet_address TEXT UNIQUE,
+  twitter_id TEXT UNIQUE,
+  google_id TEXT UNIQUE,
+  email TEXT,
   username TEXT,
   avatar TEXT,
-  twitter_id TEXT,
   balance NUMERIC DEFAULT 10000 NOT NULL,
   locked_balance NUMERIC DEFAULT 0 NOT NULL,
   total_minted INTEGER DEFAULT 0,
@@ -19,34 +32,61 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_address ON users(address);
+CREATE INDEX idx_users_wallet_address ON users(wallet_address);
+CREATE INDEX idx_users_twitter_id ON users(twitter_id);
 
--- 2. Agents表
-CREATE TABLE IF NOT EXISTS agents (
+-- 2. Agents表（包含所有字段）
+CREATE TABLE agents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   owner_id TEXT NOT NULL,
   name TEXT NOT NULL,
-  style TEXT NOT NULL,
+  nft_id INTEGER DEFAULT 0,
   color TEXT NOT NULL,
-  accessories TEXT[] DEFAULT '{}',
-  level INTEGER DEFAULT 1,
-  experience INTEGER DEFAULT 0,
+  image TEXT,
+  -- 属性
+  attack NUMERIC DEFAULT 50,
+  defense NUMERIC DEFAULT 50,
+  speed NUMERIC DEFAULT 50,
+  crit_rate NUMERIC DEFAULT 10,
+  crit_damage NUMERIC DEFAULT 150,
+  evasion NUMERIC DEFAULT 10,
+  accuracy NUMERIC DEFAULT 90,
+  luck NUMERIC DEFAULT 50,
+  -- 战斗属性
+  hp NUMERIC DEFAULT 100,
+  max_hp NUMERIC DEFAULT 100,
+  -- 经济
   balance NUMERIC DEFAULT 0 NOT NULL,
-  status TEXT DEFAULT 'idle' NOT NULL, -- idle, in_arena, fighting, eliminated
+  -- 统计
+  wins INTEGER DEFAULT 0,
+  losses INTEGER DEFAULT 0,
+  kills INTEGER DEFAULT 0,
+  deaths INTEGER DEFAULT 0,
   total_battles INTEGER DEFAULT 0,
-  total_wins INTEGER DEFAULT 0,
+  win_rate NUMERIC DEFAULT 0,
   total_earnings NUMERIC DEFAULT 0,
+  total_losses NUMERIC DEFAULT 0,
+  net_profit NUMERIC DEFAULT 0,
+  avg_damage_dealt NUMERIC DEFAULT 0,
+  avg_damage_taken NUMERIC DEFAULT 0,
+  max_kill_streak INTEGER DEFAULT 0,
+  current_kill_streak INTEGER DEFAULT 0,
+  tournament_wins INTEGER DEFAULT 0,
+  tournament_top3 INTEGER DEFAULT 0,
+  -- 状态
+  status TEXT DEFAULT 'idle' NOT NULL,
   is_player BOOLEAN DEFAULT TRUE,
+  rarity TEXT DEFAULT 'common',
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_agents_owner_id ON agents(owner_id);
-CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
-CREATE INDEX IF NOT EXISTS idx_agents_is_player ON agents(is_player);
+CREATE INDEX idx_agents_owner_id ON agents(owner_id);
+CREATE INDEX idx_agents_status ON agents(status);
+CREATE INDEX idx_agents_is_player ON agents(is_player);
 
 -- 3. 战斗记录表
-CREATE TABLE IF NOT EXISTS battles (
+CREATE TABLE battles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   round_number INTEGER NOT NULL,
   participants TEXT[] NOT NULL,
@@ -57,10 +97,10 @@ CREATE TABLE IF NOT EXISTS battles (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_battles_round_number ON battles(round_number);
+CREATE INDEX idx_battles_round_number ON battles(round_number);
 
 -- 4. 战斗日志表
-CREATE TABLE IF NOT EXISTS battle_logs (
+CREATE TABLE battle_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   battle_id UUID REFERENCES battles(id),
   attacker_id TEXT NOT NULL,
@@ -72,25 +112,25 @@ CREATE TABLE IF NOT EXISTS battle_logs (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_battle_logs_battle_id ON battle_logs(battle_id);
+CREATE INDEX idx_battle_logs_battle_id ON battle_logs(battle_id);
 
 -- 5. 交易记录表
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id TEXT NOT NULL,
   agent_id TEXT,
-  type TEXT NOT NULL, -- mint, battle_win, battle_loss, deposit, withdraw, swap, stake, unstake
+  type TEXT NOT NULL,
   amount NUMERIC NOT NULL,
   status TEXT DEFAULT 'completed' NOT NULL,
   tx_hash TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+CREATE INDEX idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX idx_transactions_type ON transactions(type);
 
 -- 6. 流动性质押表
-CREATE TABLE IF NOT EXISTS liquidity_stakes (
+CREATE TABLE liquidity_stakes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id TEXT NOT NULL,
   user_address TEXT NOT NULL,
@@ -99,16 +139,16 @@ CREATE TABLE IF NOT EXISTS liquidity_stakes (
   unlock_time TIMESTAMPTZ NOT NULL,
   last_claim_time TIMESTAMPTZ NOT NULL,
   total_fee_earnings NUMERIC DEFAULT 0 NOT NULL,
-  status TEXT DEFAULT 'active' NOT NULL, -- active, unlocked
+  status TEXT DEFAULT 'active' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_liquidity_stakes_user_address ON liquidity_stakes(user_address);
-CREATE INDEX IF NOT EXISTS idx_liquidity_stakes_status ON liquidity_stakes(status);
+CREATE INDEX idx_liquidity_stakes_user_address ON liquidity_stakes(user_address);
+CREATE INDEX idx_liquidity_stakes_status ON liquidity_stakes(status);
 
 -- 7. 流动性池全局状态表
-CREATE TABLE IF NOT EXISTS liquidity_pool (
+CREATE TABLE liquidity_pool (
   id BIGINT PRIMARY KEY DEFAULT 1,
   total_staked NUMERIC DEFAULT 0 NOT NULL,
   total_rewards NUMERIC DEFAULT 0 NOT NULL,
@@ -121,11 +161,10 @@ CREATE TABLE IF NOT EXISTS liquidity_pool (
 
 -- 插入初始记录
 INSERT INTO liquidity_pool (id, total_staked, total_rewards, apr, staker_count, fee_revenue_pool, total_fee_distributed)
-VALUES (1, 0, 0, 25, 0, 0, 0)
-ON CONFLICT (id) DO NOTHING;
+VALUES (1, 0, 0, 25, 0, 0, 0);
 
 -- 8. 轮次统计表
-CREATE TABLE IF NOT EXISTS round_stats (
+CREATE TABLE round_stats (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   round_number BIGINT NOT NULL,
   agent_count INTEGER NOT NULL,
@@ -138,13 +177,13 @@ CREATE TABLE IF NOT EXISTS round_stats (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_round_stats_round_number ON round_stats(round_number);
+CREATE INDEX idx_round_stats_round_number ON round_stats(round_number);
 
 -- 9. 平台收入记录表
-CREATE TABLE IF NOT EXISTS platform_revenue (
+CREATE TABLE platform_revenue (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   amount NUMERIC NOT NULL,
-  type TEXT NOT NULL, -- battle_fee, other
+  type TEXT NOT NULL,
   description TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -162,17 +201,6 @@ ALTER TABLE liquidity_stakes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE liquidity_pool ENABLE ROW LEVEL SECURITY;
 ALTER TABLE round_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_revenue ENABLE ROW LEVEL SECURITY;
-
--- 删除已存在的策略（如果存在）
-DROP POLICY IF EXISTS "Allow all" ON users;
-DROP POLICY IF EXISTS "Allow all" ON agents;
-DROP POLICY IF EXISTS "Allow all" ON battles;
-DROP POLICY IF EXISTS "Allow all" ON battle_logs;
-DROP POLICY IF EXISTS "Allow all" ON transactions;
-DROP POLICY IF EXISTS "Allow all" ON liquidity_stakes;
-DROP POLICY IF EXISTS "Allow all" ON liquidity_pool;
-DROP POLICY IF EXISTS "Allow all" ON round_stats;
-DROP POLICY IF EXISTS "Allow all" ON platform_revenue;
 
 -- 创建允许所有操作的策略（开发阶段）
 CREATE POLICY "Allow all" ON users FOR ALL USING (true) WITH CHECK (true);

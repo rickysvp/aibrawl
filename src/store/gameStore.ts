@@ -467,18 +467,26 @@ export const useGameStore = create<GameStore>()(
           balance: 10000,
         }));
         
-        // 批量保存到Supabase（使用Promise.allSettled避免单个失败影响整体）
-        const savePromises = systemAgents.map(agent => 
-          AgentService.createAgent({
-            ...DataTransformers.toDatabaseAgent(agent, 'system'),
-            is_player: false,
-          }).catch(err => {
-            console.error('[Arena] 保存Agent失败:', err);
-            return null;
-          })
-        );
-        
-        await Promise.allSettled(savePromises);
+        // 分批保存到Supabase，每批100个，避免资源不足
+        const batchSize = 100;
+        for (let i = 0; i < systemAgents.length; i += batchSize) {
+          const batch = systemAgents.slice(i, i + batchSize);
+          const savePromises = batch.map(agent => 
+            AgentService.createAgent({
+              ...DataTransformers.toDatabaseAgent(agent, 'system'),
+              is_player: false,
+            }).catch(err => {
+              console.error('[Arena] 保存Agent失败:', err);
+              return null;
+            })
+          );
+          await Promise.allSettled(savePromises);
+          console.log(`[Arena] 已保存 ${Math.min(i + batchSize, systemAgents.length)}/${systemAgents.length} 个Agents`);
+          // 添加小延迟，避免 overwhelming Supabase
+          if (i + batchSize < systemAgents.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
         set({ systemAgents });
         console.log('[Arena] 1000个系统Agents已生成并保存到Supabase');
       }
