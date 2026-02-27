@@ -42,15 +42,57 @@ const Header: React.FC = () => {
         <div className="max-w-screen-xl mx-auto px-4 h-20 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-6">
+          {/* LOGO图标 */}
           <div className="relative flex items-center group cursor-pointer">
             <img 
               src="/logo/AIBRAWL.png" 
               alt="AI Brawl" 
-              className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-transform duration-300 group-hover:scale-105"
+              className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-transform duration-300 group-hover:scale-105"
             />
+          </div>
+          
+          {/* 文字LOGO */}
+          <h1 className="relative flex items-center font-bold font-display tracking-wider group cursor-pointer">
+            <span className="text-3xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mr-1">AI</span>
+            <span className="text-3xl bg-gradient-to-r from-luxury-purple via-luxury-cyan to-luxury-purple bg-[length:200%_auto] animate-border-flow bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(139,92,246,0.5)]">
+              brawl
+            </span>
+            
+            {/* .fun 徽章 - 圆角底图，覆盖在 awl 下半部分 */}
+            <div className="absolute -bottom-2 right-0 z-20 px-2 py-0.5 rounded-full overflow-hidden border border-luxury-gold/30 shadow-[0_4px_10px_rgba(0,0,0,0.5)] bg-void-panel/90 backdrop-blur-md flex items-center transform hover:scale-105 transition-transform duration-300">
+              {/* 地图背景 */}
+              <div className="absolute inset-0 opacity-60 mix-blend-overlay">
+                <svg viewBox="0 0 60 20" className="w-full h-full" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="badgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                      <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,10 Q15,5 30,10 T60,10" fill="none" stroke="url(#badgeGradient)" strokeWidth="1" />
+                  <path d="M0,15 Q20,8 40,15 T60,15" fill="none" stroke="url(#badgeGradient)" strokeWidth="0.5" opacity="0.6" />
+                  <circle cx="30" cy="10" r="1.5" fill="#06b6d4" className="animate-pulse" />
+                  <circle cx="10" cy="8" r="1" fill="#8b5cf6" opacity="0.6" />
+                  <circle cx="50" cy="12" r="1" fill="#f59e0b" opacity="0.6" />
+                </svg>
+              </div>
+              
+              {/* 扫描光效 */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+
+              {/* 文字 */}
+              <span className="relative text-[10px] font-bold italic z-10 flex items-baseline">
+                <span className="text-luxury-cyan animate-pulse mr-0.5">.</span>
+                <span className="bg-gradient-to-r from-luxury-gold via-luxury-rose to-luxury-gold bg-[length:200%_auto] animate-border-flow bg-clip-text text-transparent drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]">
+                  fun
+                </span>
+              </span>
+            </div>
+            
             {/* 装饰性光效 */}
             <div className="absolute -inset-4 bg-gradient-to-r from-luxury-purple/20 via-luxury-cyan/20 to-luxury-gold/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full pointer-events-none" />
-          </div>
+          </h1>
           {/* 平台统计 */}
           <div className="hidden md:flex items-center gap-1 glass rounded-xl px-4 py-2 border border-white/5">
             <div className="flex items-center gap-3 pr-4 border-r border-white/10">
