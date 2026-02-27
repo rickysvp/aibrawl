@@ -72,9 +72,20 @@ const Squad: React.FC = () => {
 
       const newAgents: Agent[] = [];
       for (let i = 0; i < mintCount; i++) {
-        const agent = await mintAgent();
-        if (agent) {
-          newAgents.push(agent);
+        // 添加超时机制，防止铸造卡住
+        const mintPromise = mintAgent();
+        const timeoutPromise = new Promise<null>((_, reject) => 
+          setTimeout(() => reject(new Error('Mint timeout')), 5000)
+        );
+        
+        try {
+          const agent = await Promise.race([mintPromise, timeoutPromise]);
+          if (agent) {
+            newAgents.push(agent);
+          }
+        } catch (timeoutError) {
+          console.error(`Mint ${i + 1} timed out, continuing...`);
+          // 超时后继续下一个，不阻塞
         }
       }
 
