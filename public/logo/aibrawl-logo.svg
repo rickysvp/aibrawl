@@ -2,7 +2,7 @@
   <defs>
     <!-- 发光滤镜 -->
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
       <feMerge>
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -11,67 +11,61 @@
     
     <!-- 金色到紫色渐变 -->
     <linearGradient id="goldPurple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#FF6B6B;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#FF6B6B"/>
+      <stop offset="100%" style="stop-color:#8B5CF6"/>
     </linearGradient>
     
-    <!-- 青色发光渐变 -->
+    <!-- 青色发光 -->
     <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#00FFFF;stop-opacity:0.5" />
+      <stop offset="0%" style="stop-color:#06B6D4"/>
+      <stop offset="100%" style="stop-color:#00FFFF"/>
     </linearGradient>
   </defs>
   
   <!-- 背景圆环 -->
-  <circle cx="100" cy="85" r="70" fill="none" stroke="url(#goldPurple)" stroke-width="3" filter="url(#glow)" opacity="0.8"/>
-  <circle cx="100" cy="85" r="65" fill="none" stroke="#06B6D4" stroke-width="1" opacity="0.5"/>
+  <circle cx="100" cy="85" r="70" fill="none" stroke="url(#goldPurple)" stroke-width="3" filter="url(#glow)"/>
+  <circle cx="100" cy="85" r="62" fill="none" stroke="#06B6D4" stroke-width="1" opacity="0.3"/>
   
-  <!-- 外圈装饰点 -->
-  <circle cx="100" cy="15" r="3" fill="#FFD700" filter="url(#glow)"/>
-  <circle cx="100" cy="155" r="3" fill="#8B5CF6" filter="url(#glow)"/>
-  <circle cx="30" cy="85" r="3" fill="#06B6D4" filter="url(#glow)"/>
-  <circle cx="170" cy="85" r="3" fill="#FF6B6B" filter="url(#glow)"/>
-  
-  <!-- 交叉的像素剑 -->
-  <!-- 剑1 (左上到右下) -->
+  <!-- 像素闪电 - 主体 -->
   <g filter="url(#glow)">
-    <!-- 剑刃 -->
-    <rect x="75" y="45" width="8" height="50" fill="url(#cyanGlow)" transform="rotate(-45 79 70)"/>
-    <!-- 剑柄 -->
-    <rect x="72" y="85" width="14" height="20" fill="#FFD700" transform="rotate(-45 79 95)"/>
-    <!-- 剑格 -->
-    <rect x="65" y="80" width="28" height="6" fill="#8B5CF6" transform="rotate(-45 79 83)"/>
+    <!-- 闪电主干 - 像素风格 -->
+    <rect x="96" y="25" width="8" height="20" fill="#FFD700"/>
+    <rect x="88" y="45" width="8" height="15" fill="#FFD700"/>
+    <rect x="96" y="60" width="8" height="15" fill="#FF6B6B"/>
+    <rect x="104" y="75" width="8" height="15" fill="#FF6B6B"/>
+    <rect x="96" y="90" width="8" height="15" fill="#8B5CF6"/>
+    <rect x="88" y="105" width="8" height="15" fill="#8B5CF6"/>
+    <rect x="96" y="120" width="8" height="12" fill="#06B6D4"/>
+    <rect x="104" y="132" width="6" height="10" fill="#06B6D4"/>
+    
+    <!-- 闪电分支1 -->
+    <rect x="80" y="55" width="8" height="8" fill="#FFD700" opacity="0.8"/>
+    <rect x="72" y="63" width="6" height="6" fill="#FFD700" opacity="0.6"/>
+    
+    <!-- 闪电分支2 -->
+    <rect x="112" y="85" width="8" height="8" fill="#FF6B6B" opacity="0.8"/>
+    <rect x="120" y="93" width="6" height="6" fill="#FF6B6B" opacity="0.6"/>
+    
+    <!-- 闪电分支3 -->
+    <rect x="80" y="115" width="8" height="8" fill="#8B5CF6" opacity="0.8"/>
+    <rect x="72" y="123" width="6" height="6" fill="#8B5CF6" opacity="0.6"/>
   </g>
   
-  <!-- 剑2 (右上到左下) -->
-  <g filter="url(#glow)">
-    <!-- 剑刃 -->
-    <rect x="117" y="45" width="8" height="50" fill="url(#cyanGlow)" transform="rotate(45 121 70)"/>
-    <!-- 剑柄 -->
-    <rect x="114" y="85" width="14" height="20" fill="#FFD700" transform="rotate(45 121 95)"/>
-    <!-- 剑格 -->
-    <rect x="107" y="80" width="28" height="6" fill="#8B5CF6" transform="rotate(45 121 83)"/>
+  <!-- 外围像素装饰 -->
+  <g opacity="0.6">
+    <rect x="45" y="45" width="4" height="4" fill="#06B6D4" filter="url(#glow)"/>
+    <rect x="151" y="45" width="4" height="4" fill="#FFD700" filter="url(#glow)"/>
+    <rect x="45" y="121" width="4" height="4" fill="#8B5CF6" filter="url(#glow)"/>
+    <rect x="151" y="121" width="4" height="4" fill="#FF6B6B" filter="url(#glow)"/>
   </g>
-  
-  <!-- 中心AI芯片 -->
-  <rect x="88" y="73" width="24" height="24" fill="#0A0A10" stroke="url(#goldPurple)" stroke-width="2" filter="url(#glow)"/>
-  <!-- 芯片电路纹理 -->
-  <line x1="94" y1="79" x2="106" y2="79" stroke="#06B6D4" stroke-width="1"/>
-  <line x1="94" y1="85" x2="106" y2="85" stroke="#06B6D4" stroke-width="1"/>
-  <line x1="94" y1="91" x2="106" y2="91" stroke="#06B6D4" stroke-width="1"/>
-  <circle cx="100" cy="85" r="3" fill="#FFD700"/>
-  
-  <!-- 闪电装饰 -->
-  <path d="M55 55 L60 65 L57 65 L62 75" fill="none" stroke="#FFD700" stroke-width="2" filter="url(#glow)"/>
-  <path d="M145 55 L140 65 L143 65 L138 75" fill="none" stroke="#8B5CF6" stroke-width="2" filter="url(#glow)"/>
   
   <!-- 文字 AI -->
-  <text x="100" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="url(#goldPurple)" filter="url(#glow)">AI</text>
+  <text x="100" y="175" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="32" font-weight="bold" fill="url(#goldPurple)" filter="url(#glow)">AI</text>
   
   <!-- 文字 BRAWL -->
-  <text x="100" y="192" text-anchor="middle" font-family="Courier New, monospace" font-size="14" font-weight="bold" fill="#06B6D4" letter-spacing="3" filter="url(#glow)">BRAWL</text>
+  <text x="100" y="192" text-anchor="middle" font-family="Courier New, monospace" font-size="14" font-weight="bold" fill="#06B6D4" letter-spacing="4" filter="url(#glow)">BRAWL</text>
   
   <!-- 底部装饰线 -->
-  <line x1="60" y1="182" x2="140" y2="182" stroke="url(#goldPurple)" stroke-width="1" opacity="0.5"/>
+  <line x1="50" y1="182" x2="150" y2="182" stroke="url(#goldPurple)" stroke-width="2" opacity="0.6"/>
 </svg>
