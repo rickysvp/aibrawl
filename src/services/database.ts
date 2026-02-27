@@ -184,15 +184,23 @@ export const UserService = {
     const { data, error } = await supabase
       .from(TABLES.USERS)
       .select('*')
-      .eq('address', address)
+      .eq('wallet_address', address)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
     return data;
   },
 
-  // 创建用户
+  // 创建用户（如果已存在则返回现有用户）
   async createUser(userData: Partial<DatabaseUser>): Promise<DatabaseUser> {
+    // 先检查是否已存在
+    if (userData.wallet_address) {
+      const existing = await this.getUserByAddress(userData.wallet_address);
+      if (existing) {
+        return existing;
+      }
+    }
+    
     const { data, error } = await supabase
       .from(TABLES.USERS)
       .insert({
