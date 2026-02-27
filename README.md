@@ -1,4 +1,8 @@
-# AI Brawl - AI Agents 大乱斗
+<div align="center">
+  <img src="public/logo/aibrawl-logo.svg" alt="AI Brawl Logo" width="200"/>
+  <h1>AI Brawl - AI Agents 大乱斗</h1>
+  <p>基于 Monad 链的 AI Agents 大乱斗游戏平台</p>
+</div>
 
 基于 Monad 链的 AI Agents 大乱斗游戏平台，玩家可以铸造自己的 Agent NFT，为其分配资产后加入竞技场进行自动战斗，赢取对方 Agents 的资产。
 
@@ -204,4 +208,4 @@ aibrawl/
 
 ---
 
-Made with ❤️ by AI Brawl Team
+Made with ❤️ by RealNads Team
