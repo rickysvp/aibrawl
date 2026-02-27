@@ -201,8 +201,11 @@ const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           status: isEliminated ? 'eliminated' : 'in_arena' 
         });
 
-        // 更新攻击者余额（增加）
-        updateParticipant(latestAttacker.id, { balance: newAttackerBalance });
+        // 更新攻击者余额（增加），并确保状态为 in_arena
+        updateParticipant(latestAttacker.id, { 
+          balance: newAttackerBalance,
+          status: 'in_arena'
+        });
 
         // 淘汰效果
         if (isEliminated) {

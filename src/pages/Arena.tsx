@@ -386,6 +386,20 @@ const Arena: React.FC = () => {
         syncParticipantsToStore([]);
         syncSelectedSlotsToStore([]);
         syncPhaseToStore('waiting');
+        
+        // 重置所有 fighting 状态的 Agent 为 in_arena（防止状态不一致）
+        const finalState = useGameStore.getState();
+        finalState.myAgents.forEach(agent => {
+          if (agent.status === 'fighting') {
+            useGameStore.getState().updateParticipant(agent.id, { status: 'in_arena' });
+          }
+        });
+        finalState.systemAgents.forEach(agent => {
+          if (agent.status === 'fighting') {
+            useGameStore.getState().updateParticipant(agent.id, { status: 'in_arena' });
+          }
+        });
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     };
