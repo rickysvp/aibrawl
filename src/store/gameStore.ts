@@ -444,65 +444,36 @@ export const useGameStore = create<GameStore>()(
   systemAgents: [],
   
   initializeArena: async () => {
-    try {
-      // 重置所有 fighting 状态的 Agent 为 in_arena（防止页面刷新后状态不一致）
-      set((state) => ({
+    const state = get();
+    
+    // 如果已经有系统Agents（从localStorage恢复），直接使用
+    if (state.systemAgents.length > 0) {
+      console.log(`[Arena] 从本地存储恢复 ${state.systemAgents.length} 个系统Agents`);
+      
+      // 重置所有 fighting 状态的 Agent 为 in_arena
+      set({
+        systemAgents: state.systemAgents.map(a => 
+          a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
+        ),
         myAgents: state.myAgents.map(a => 
           a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
         ),
-      }));
-      
-      // 从 Supabase 获取系统 Agents
-      const dbAgents = await AgentService.getSystemAgents(1000);
-      
-      if (dbAgents.length > 0) {
-        // 如果数据库已有系统 Agents，直接使用（同时重置 fighting 状态）
-        const systemAgents = dbAgents.map(DataTransformers.toFrontendAgent).map(a => 
-          a.status === 'fighting' ? { ...a, status: 'in_arena' as const } : a
-        );
-        set({ systemAgents });
-        console.log(`[Arena] 从数据库加载 ${systemAgents.length} 个系统Agents`);
-      } else {
-        // 如果数据库为空，生成并保存到数据库
-        console.log('[Arena] 数据库为空，生成系统Agents...');
-        const systemAgents = generateSystemAgents(1000).map(agent => ({
-          ...agent,
-          status: 'in_arena' as const,
-          balance: 10000,
-        }));
-        
-        // 批量保存到数据库
-        for (const agent of systemAgents) {
-          await AgentService.createAgent({
-            ...DataTransformers.toDatabaseAgent(agent, 'system'),
-            is_player: false,
-          });
-        }
-        
-        set({ systemAgents });
-        console.log('[Arena] 1000个系统Agents已保存到数据库');
-      }
-      
-      // 启动后台自动战斗系统
-      const state = get();
-      if (!state.autoBattleInterval) {
-        state.startAutoBattleSystem();
-      }
-    } catch (error) {
-      console.error('[Arena] 初始化失败:', error);
-      // 降级到本地生成
+      });
+    } else {
+      // 首次加载，生成系统Agents
+      console.log('[Arena] 首次加载，生成系统Agents...');
       const systemAgents = generateSystemAgents(1000).map(agent => ({
         ...agent,
         status: 'in_arena' as const,
         balance: 10000,
       }));
       set({ systemAgents });
-      
-      // 即使失败也启动自动战斗
-      const state = get();
-      if (!state.autoBattleInterval) {
-        state.startAutoBattleSystem();
-      }
+      console.log('[Arena] 1000个系统Agents已生成');
+    }
+    
+    // 启动后台自动战斗系统
+    if (!state.autoBattleInterval) {
+      state.startAutoBattleSystem();
     }
   },
   
@@ -1784,6 +1755,10 @@ export const useGameStore = create<GameStore>()(
     wallet: state.wallet,
     myAgents: state.myAgents,
     userStakes: state.userStakes,
+    systemAgents: state.systemAgents,
+    totalSystemRounds: state.totalSystemRounds,
+    liquidityPool: state.liquidityPool,
+    platformRevenue: state.platformRevenue,
   }),
   onRehydrateStorage: () => (state) => {
     // 数据迁移：将旧的'dead'状态改为'eliminated'
