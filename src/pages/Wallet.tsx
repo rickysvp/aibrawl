@@ -273,6 +273,7 @@ const WalletPage: React.FC = () => {
       case 'deposit': return { icon: ArrowDownRight, color: 'text-luxury-cyan', bgColor: 'bg-luxury-cyan' };
       case 'withdraw': return { icon: ArrowUpRight, color: 'text-luxury-amber', bgColor: 'bg-luxury-amber' };
       case 'swap': return { icon: RefreshCw, color: 'text-luxury-gold', bgColor: 'bg-luxury-gold' };
+      default: return { icon: Wallet, color: 'text-white', bgColor: 'bg-white/20' };
     }
   };
 
