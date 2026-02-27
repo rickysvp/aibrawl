@@ -326,7 +326,9 @@
     "scanQR": "Scan QR code to deposit",
     "notice": "Note",
     "minDeposit": "Min deposit",
-    "friendDeposit": "Deposit"
+    "friendDeposit": "Deposit",
+    "withdrawAll": "Withdraw",
+    "withdrawAllSuccess": "Successfully collected all Agents balance"
   },
   "liquidity": {
     "title": "Liquidity Mining",

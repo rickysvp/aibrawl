@@ -1761,8 +1761,9 @@ export const useGameStore = create<GameStore>()(
     platformRevenue: state.platformRevenue,
   }),
   onRehydrateStorage: () => (state) => {
+    if (!state) return;
     // 数据迁移：将旧的'dead'状态改为'eliminated'
-    if (state?.myAgents) {
+    if (state.myAgents) {
       state.myAgents = state.myAgents.map(agent => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((agent.status as any) === 'dead') {
@@ -1770,6 +1771,18 @@ export const useGameStore = create<GameStore>()(
         }
         return agent;
       });
+    }
+    // 确保userStakes是数组
+    if (!state.userStakes) {
+      state.userStakes = [];
+    }
+    // 确保systemAgents是数组
+    if (!state.systemAgents) {
+      state.systemAgents = [];
+    }
+    // 确保totalSystemRounds是数字
+    if (typeof state.totalSystemRounds !== 'number') {
+      state.totalSystemRounds = 0;
     }
   },
 }));

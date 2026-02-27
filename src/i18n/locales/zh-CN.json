@@ -323,6 +323,7 @@
     "liquidityMining": "流动性挖矿",
     "stakedLiquidity": "质押流动性",
     "pendingRewards": "待领取收益",
+    "withdrawAll": "提现",
     "withdrawAllSuccess": "已成功归集所有 Agents 余额",
     "depositDesc": "从外部钱包转入",
     "swapDesc": "代币兑换",
