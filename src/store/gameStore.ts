@@ -1783,6 +1783,7 @@ export const useGameStore = create<GameStore>()(
   partialize: (state) => ({
     wallet: state.wallet,
     myAgents: state.myAgents,
+    userStakes: state.userStakes,
   }),
   onRehydrateStorage: () => (state) => {
     // 数据迁移：将旧的'dead'状态改为'eliminated'
