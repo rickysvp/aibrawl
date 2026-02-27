@@ -1825,6 +1825,8 @@ export const useGameStore = create<GameStore>()(
   storage: createJSONStorage(() => localStorage),
   partialize: (state) => ({
     wallet: state.wallet,
+    myAgents: state.myAgents,
+    userStakes: state.userStakes,
     // 注意：systemAgents不再持久化到localStorage，改为从Supabase加载
     // 避免localStorage超出配额
   }),
