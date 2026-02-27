@@ -7,6 +7,7 @@ import AgentCard from '../components/AgentCard';
 import { Agent } from '../types';
 import { Trophy, Plus, Wallet, X, ChevronRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RoundStatsService } from '../services/database';
 
 // 生成今日 TOP 100 排行榜数据
 const generateTop100 = () => {
@@ -340,6 +341,33 @@ const Arena: React.FC = () => {
         // 结算后检查状态
         const afterSettlementState = useGameStore.getState();
         console.log('[Settlement] After settlement:', afterSettlementState.myAgents.map(a => ({ id: a.id, name: a.name, balance: a.balance, status: a.status })));
+
+        // 保存轮次统计数据到Supabase
+        try {
+          const allAgents = [...afterSettlementState.myAgents, ...afterSettlementState.systemAgents];
+          const totalValueLocked = allAgents.reduce((sum, a) => sum + a.balance, 0);
+          const agentCount = allAgents.length;
+          const prizePool = selectedParticipants.reduce((sum, p) => sum + p.balance, 0);
+          const winner = top3[0];
+          
+          // 获取当前轮次号
+          const latestRound = await RoundStatsService.getLatestRound();
+          const roundNumber = (latestRound?.round_number || 0) + 1;
+          
+          await RoundStatsService.createRoundStats({
+            round_number: roundNumber,
+            agent_count: agentCount,
+            total_value_locked: totalValueLocked,
+            prize_pool: prizePool,
+            winner_id: winner?.agent.id,
+            winner_profit: winner?.profit || 0,
+            started_at: new Date(Date.now() - 30000).toISOString(), // 假设30秒前开始
+            ended_at: new Date().toISOString(),
+          });
+          console.log(`[RoundStats] Saved round ${roundNumber}: ${agentCount} agents, TVL: ${totalValueLocked}`);
+        } catch (statsError) {
+          console.error('[RoundStats] Failed to save round stats:', statsError);
+        }
 
         // 3秒倒计时后关闭结算层
         for (let i = 3; i > 0; i--) {

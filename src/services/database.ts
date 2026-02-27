@@ -1,4 +1,4 @@
-import { supabase, TABLES, DatabaseAgent, DatabaseUser, DatabaseBattle, DatabaseBattleLog, DatabaseTransaction, DatabaseLiquidityStake, DatabaseLiquidityPool } from '../lib/supabase';
+import { supabase, TABLES, DatabaseAgent, DatabaseUser, DatabaseBattle, DatabaseBattleLog, DatabaseTransaction, DatabaseLiquidityStake, DatabaseLiquidityPool, DatabaseRoundStats } from '../lib/supabase';
 import { Agent } from '../types';
 
 // ==================== Agent 服务 ====================
@@ -393,6 +393,58 @@ export const LiquidityService = {
       .select('*')
       .eq('status', 'active')
       .order('staked_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+};
+
+// ==================== Round Stats 服务 ====================
+export const RoundStatsService = {
+  // 创建轮次统计
+  async createRoundStats(stats: Partial<DatabaseRoundStats>): Promise<DatabaseRoundStats> {
+    const { data, error } = await supabase
+      .from(TABLES.ROUND_STATS)
+      .insert(stats)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // 获取所有轮次统计
+  async getAllRoundStats(limit: number = 100): Promise<DatabaseRoundStats[]> {
+    const { data, error } = await supabase
+      .from(TABLES.ROUND_STATS)
+      .select('*')
+      .order('round_number', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // 获取最新轮次
+  async getLatestRound(): Promise<DatabaseRoundStats | null> {
+    const { data, error } = await supabase
+      .from(TABLES.ROUND_STATS)
+      .select('*')
+      .order('round_number', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) return null;
+    return data;
+  },
+
+  // 获取总TVL历史
+  async getTVLHistory(limit: number = 50): Promise<{ round_number: number; total_value_locked: number; created_at: string }[]> {
+    const { data, error } = await supabase
+      .from(TABLES.ROUND_STATS)
+      .select('round_number, total_value_locked, created_at')
+      .order('round_number', { ascending: true })
+      .limit(limit);
 
     if (error) throw error;
     return data || [];

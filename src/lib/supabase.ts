@@ -21,6 +21,7 @@ export const TABLES = {
   TRANSACTIONS: 'transactions',
   LIQUIDITY_STAKES: 'liquidity_stakes',
   LIQUIDITY_POOL: 'liquidity_pool',
+  ROUND_STATS: 'round_stats',
 } as const;
 
 // 类型定义
@@ -144,4 +145,18 @@ export interface DatabaseLiquidityPool {
   fee_revenue_pool: number;
   total_fee_distributed: number;
   updated_at: string;
+}
+
+// 每轮统计数据
+export interface DatabaseRoundStats {
+  id: string;
+  round_number: number;
+  agent_count: number;
+  total_value_locked: number; // TVL = 所有agents余额总和
+  prize_pool: number;
+  winner_id?: string;
+  winner_profit: number;
+  started_at: string;
+  ended_at: string;
+  created_at: string;
 }
